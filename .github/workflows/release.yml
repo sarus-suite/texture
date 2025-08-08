@@ -1,0 +1,19 @@
+name: release
+
+jobs:
+  build:
+    if: github.actor == 'matteo-chesi'
+    os: opensuse
+    os_version: 15.5
+    runs-on: chesim-zinal-login
+    steps:
+      - name: Build 
+        run: |
+          ./build.sh
+      
+      - name: Upload .rpm packages as artifacts
+        uses: actions/upload-artifact@4
+        with:
+          name: packages
+          path: artifacts/packages/${{ os }}-${{ os_version }}/RPMS/*.rpm
+
