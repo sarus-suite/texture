@@ -3,8 +3,9 @@ name: release
 jobs:
   build:
     if: github.actor == 'matteo-chesi'
-    os: opensuse
-    os_version: 15.5
+    env:
+      os: opensuse
+      os_version: 15.5
     runs-on: chesim-zinal-login
     steps:
       - name: Build 
@@ -15,5 +16,5 @@ jobs:
         uses: actions/upload-artifact@4
         with:
           name: packages
-          path: artifacts/packages/${{ os }}-${{ os_version }}/RPMS/*.rpm
+          path: artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/*.rpm
 
