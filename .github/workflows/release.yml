@@ -1,5 +1,7 @@
 name: release
 
+on: push
+
 jobs:
   build:
     if: github.actor == 'matteo-chesi'
