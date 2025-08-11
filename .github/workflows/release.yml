@@ -20,6 +20,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: packages
-          path: ${{ github.workspace }}/artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**.rpm
+          path: ${{ github.workspace }}/artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**/*.rpm
           if-no-files-found: error
 
