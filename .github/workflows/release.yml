@@ -30,20 +30,20 @@ jobs:
           mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
           tar cvzf ../sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz .
       
-      - name: Upload bundle as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: "sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz"
-          path: ${{ github.workspace }}/artifacts/sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz
-          if-no-files-found: error
+#     - name: Upload bundle as artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: "sarus-suite"
+#          path: ${{ github.workspace }}/artifacts/sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz
+#          if-no-files-found: error
 
   release:
     if: github.actor == 'matteo-chesi'
     runs-on: chesim-zinal-login
     needs: [build]
     steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v4
 
       - name: Create Release
         uses: ncipollo/release-action@v1
@@ -51,7 +51,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          artifacts: "sarus-suite-*.tar.gz"
+          artifacts: "artifacts/sarus-suite-*.tar.gz"
           allowUpdates: true
           replacesArtifacts: false
           draft: false
