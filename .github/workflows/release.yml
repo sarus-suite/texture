@@ -10,8 +10,9 @@ jobs:
       os_version: 15.5
     runs-on: chesim-zinal-login
     steps:
+      - uses: actions/checkout@v4
+
       - name: Build
-        uses: actions/checkout@v4
         run: |
           ./build.sh
       
