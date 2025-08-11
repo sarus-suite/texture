@@ -21,3 +21,6 @@ jobs:
         with:
           name: packages
           path: artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**.rpm
+        run: |
+          echo "${{ env.PWD }} or $PWD"
+
