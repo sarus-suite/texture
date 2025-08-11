@@ -24,11 +24,12 @@ jobs:
       - name: Bundle
         run: |
           cd ${{ github.workspace }}
-          mkdir artifacts/${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}
-          cd artifacts/${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}
+          mkdir artifacts/sarus-suite
+          cd artifacts/sarus-suite
           mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/noarch/*.rpm ./
           mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
-          tar cvzf ../sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz .
+          cd ..
+          tar cvzf ./sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz sarus-suite/
       
 #     - name: Upload bundle as artifact
 #        uses: actions/upload-artifact@v4
