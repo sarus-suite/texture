@@ -1,0 +1,59 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*' 
+
+jobs:
+  build:
+    if: github.actor == 'matteo-chesi'
+    env:
+      os: opensuse
+      os_version: 15.5
+    runs-on: chesim-zinal-login
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build
+        run: |
+          ./clean.sh && \
+          ./build.sh && \
+          echo "ARCH=$(uname -m)" >> $GITHUB_ENV
+
+      - name: Bundle
+        run: |
+          cd ${{ github.workspace }}
+          mkdir -p artifacts/sarus-suite
+          cd artifacts/sarus-suite
+          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/noarch/*.rpm ./
+          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
+          cd ..
+          tar cvzf ./sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz sarus-suite/
+      
+#     - name: Upload bundle as artifact
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: "sarus-suite"
+#          path: ${{ github.workspace }}/artifacts/sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz
+#          if-no-files-found: error
+
+  release:
+    if: github.actor == 'matteo-chesi'
+    runs-on: chesim-zinal-login
+    needs: [build]
+    steps:
+#      - name: Download artifacts
+#        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          artifacts: "artifacts/sarus-suite-*.tar.gz"
+          allowUpdates: true
+          replacesArtifacts: false
+          draft: false
+          prerelease: false

@@ -18,12 +18,13 @@
 
 %{!?_user_tmpfilesdir: %global _user_tmpfilesdir %{_datadir}/user-tmpfiles.d}
 %define project        github.com/containers/podman
+%define build_os       %(cat /etc/os-release| sort | grep -E "^ID=|^VERSION_ID=" | awk -F= '{print $2}' | tr -d '"' | tr "-" "." | paste -s -d'.' | sed 's/.leap//')
 
 %bcond_without  apparmor
 
 Name:           podman
 Version:        5.5.2
-Release:        0
+Release:        0.%{build_os}
 Summary:        Daemon-less container engine for managing containers, pods and images
 License:        Apache-2.0
 Group:          System/Management
