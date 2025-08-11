@@ -24,7 +24,7 @@ jobs:
       - name: Bundle
         run: |
           cd ${{ github.workspace }}
-          mkdir artifacts/sarus-suite
+          mkdir -p artifacts/sarus-suite
           cd artifacts/sarus-suite
           mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/noarch/*.rpm ./
           mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
