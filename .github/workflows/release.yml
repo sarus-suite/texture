@@ -14,10 +14,10 @@ jobs:
 
       - name: Build
         run: |
-          ./build.sh
+          ./clean.sh && ./build.sh
       
       - name: Upload .rpm packages as artifacts
         uses: actions/upload-artifact@v4
         with:
           name: packages
-          path: artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/*.rpm
+          path: artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**.rpm
