@@ -6,7 +6,7 @@
 SCRIPT_DIR=$(readlink -f $(dirname $0))
 cd $SCRIPT_DIR
 
-PRODUCTS_TO_FETCH=""
+PRODUCTS_TO_FETCH="parallax"
 PRODUCTS_TO_BUILD="podman"
 
 . etc/release.cfg
