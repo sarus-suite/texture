@@ -18,12 +18,22 @@ jobs:
       - name: Build
         run: |
           ./clean.sh && ./build.sh
+
+      - name: Bundle
+        run: |
+          export ARCH=$(uname -m)
+          cd ${{ github.workspace }}
+          mkdir artifacts/${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}
+          cd artifacts/${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}
+          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/noarch/*.rpm ./
+          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
+          tar cvzf ../sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz .
       
       - name: Upload .rpm packages as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: "packages"
-          path: ${{ github.workspace }}/artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**/*.rpm
+          name: "sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz"
+          path: ${{ github.workspace }}/artifacts/sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz
           if-no-files-found: error
 
   release:
@@ -40,7 +50,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          artifacts: "packages/**/*.rpm"
+          artifacts: "sarus-suite-*.tar.gz"
           allowUpdates: true
           replacesArtifacts: false
           draft: false
