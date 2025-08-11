@@ -40,7 +40,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          artifacts: "packages/*"
+          artifacts: "packages/**/*.rpm"
           allowUpdates: true
           replacesArtifacts: false
           draft: false
