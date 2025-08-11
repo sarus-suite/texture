@@ -1,4 +1,4 @@
-name: release
+name: release ${{ github.ref_name }}
 
 on:
   push:
@@ -17,11 +17,12 @@ jobs:
 
       - name: Build
         run: |
-          ./clean.sh && ./build.sh
+          ./clean.sh && \
+          ./build.sh && \
+          echo "ARCH=$(uname -m)" >> $GITHUB_ENV
 
       - name: Bundle
         run: |
-          export ARCH=$(uname -m)
           cd ${{ github.workspace }}
           mkdir artifacts/${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}
           cd artifacts/${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}
@@ -29,7 +30,7 @@ jobs:
           mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
           tar cvzf ../sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz .
       
-      - name: Upload .rpm packages as artifacts
+      - name: Upload bundle as artifact
         uses: actions/upload-artifact@v4
         with:
           name: "sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz"
