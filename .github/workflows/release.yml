@@ -20,7 +20,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: packages
-          path: artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**.rpm
-        run: |
-          echo "${{ env.PWD }} or $PWD"
+          path: ${{ github.workspace }}/texture/artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**.rpm
+        if-no-files-found: error
 
