@@ -1,6 +1,9 @@
 name: release
 
-on: push
+on:
+  push:
+    tags:
+      - 'v*' 
 
 jobs:
   build:
@@ -19,7 +22,25 @@ jobs:
       - name: Upload .rpm packages as artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: packages
+          name: "packages"
           path: ${{ github.workspace }}/artifacts/packages/${{ env.os }}-${{ env.os_version }}/RPMS/**/*.rpm
           if-no-files-found: error
 
+  release:
+    if: github.actor == 'matteo-chesi'
+    runs-on: chesim-zinal-login
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          artifacts: "packages/*"
+          allowUpdates: true
+          replacesArtifacts: false
+          draft: false
+          prerelease: false
