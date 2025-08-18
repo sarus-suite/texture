@@ -7,8 +7,14 @@ SRC_DIR="${TMP_DIR}/src"
 ARTIFACTS_DIR="${SCRIPT_DIR}/artifacts"
 cd $SCRIPT_DIR
 
-. ./etc/release.cfg
-. ./etc/system.cfg
+. ${SCRIPT_DIR}/etc/release.cfg
+. ${SCRIPT_DIR}/etc/system.cfg
+. ${SCRIPT_DIR}/lib/common.sh
+
+if [ -z "$PODMAN_VERSION" ]
+then
+  PODMAN_VERSION=$(get_github_repo_latest_release containers/podman)
+fi
 
 # BUILD
 BUILD_OS_NAME='opensuse'
@@ -21,7 +27,7 @@ cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/podman.spec ./podman.spec
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/podman.conf ./podman.conf
-podman run --rm -ti -v ${SRC_DIR}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/${BUILD_OS}/build_in_container.sh
+podman run --rm -ti -e PODMAN_VERSION=${PODMAN_VERSION} -v ${SRC_DIR}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/${BUILD_OS}/build_in_container.sh
 
 # EXTRACT RPMS
 OUT_DIR="${ARTIFACTS_DIR}/packages/${BUILD_OS}"
