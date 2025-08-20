@@ -1,0 +1,27 @@
+Name:     sarus-suite
+Version:  {{ version }}
+Release:  {{ release }}
+Summary:  An OCI-compatible set of container tools for HPC 
+
+License:  BSD
+URL:      https://github.com/sarus-suite/texture
+
+Requires: podman = {{ podman_version }}
+Requires: podmansh = {{ podman_version }}
+Requires: podman-docker = {{ podman_version }}
+Requires: squashfuse = {{ squashfuse_version }}
+Requires: squashfuse-libs = {{ squashfuse_version }}
+
+%description
+Sarus-suite provides a set of container tools to enable container usage
+on HPC systems.
+
+%prep 
+
+%build
+
+%install
+
+%clean
+
+%files

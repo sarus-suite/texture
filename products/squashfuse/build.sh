@@ -18,6 +18,7 @@ then
 fi
 
 # BUILD
+PRODUCT='squashfuse'
 BUILD_OS_NAME='opensuse'
 BUILD_OS_VERSION_ID='15.5'
 BUILD_OS="${BUILD_OS_NAME}-${BUILD_OS_VERSION_ID}"
@@ -30,8 +31,13 @@ cp ${THIS_DIR}/src/${BUILD_OS_NAME}/squashfuse.spec ./squashfuse.spec
 podman run --rm -ti -e SQUASHFUSE_VERSION=${SQUASHFUSE_VERSION} -v ${SRC_DIR}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/${BUILD_OS}/build_in_container.sh
 
 # INSTALL
-#mkdir -p ${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/bin
-#mv ${SRC_DIR}/${BUILD_OS}/conmon/bin/conmon ${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/bin/conmon
+OUT_DIR="${ARTIFACTS_DIR}/packages/${BUILD_OS}"
+mkdir -p ${OUT_DIR}/SRPMS
+mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/SRPMS/*.rpm ${OUT_DIR}/SRPMS/
+mkdir -p ${OUT_DIR}/RPMS/${ARCH}
+mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/${ARCH}/*.rpm ${OUT_DIR}/RPMS/${ARCH}/
+#mkdir -p ${OUT_DIR}/RPMS/noarch
+#mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/noarch/*.rpm ${OUT_DIR}/RPMS/noarch/
 
 # CLEAN
-#rm -rf ${SRC_DIR}/${BUILD_OS}
+rm -rf ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
