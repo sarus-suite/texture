@@ -17,6 +17,7 @@ then
 fi
 
 # BUILD
+PRODUCT="podman"
 BUILD_OS_NAME='opensuse'
 BUILD_OS_VERSION_ID='15.5'
 BUILD_OS="${BUILD_OS_NAME}-${BUILD_OS_VERSION_ID}"
@@ -38,3 +39,5 @@ mv ${SRC_DIR}/${BUILD_OS}/podman/rpm/RPMS/${ARCH}/*.rpm ${OUT_DIR}/RPMS/${ARCH}/
 mkdir -p ${OUT_DIR}/RPMS/noarch
 mv ${SRC_DIR}/${BUILD_OS}/podman/rpm/RPMS/noarch/*.rpm ${OUT_DIR}/RPMS/noarch/
 
+# CLEAN
+rm -rf ${SRC_DIR}/${BUILD_OS}/${PRODUCT}

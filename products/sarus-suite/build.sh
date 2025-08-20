@@ -27,7 +27,9 @@ cd ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
 
 function get_artifacts_versions() {
   unset PODMAN_VERSION	
-  unset SQUASHFUSE_VERSION	
+  unset SQUASHFUSE_VERSION  
+  PODMAN_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^podman-\([[:digit:]].*\).$ARCH.rpm$/\1/p")
+  SQUASHFUSE_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^squashfuse-\([[:digit:]].*\).$ARCH.rpm$/\1/p")
 }
 
 function check_artifacts_versions() {
@@ -87,4 +89,4 @@ mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/${ARCH}/*.rpm ${OUT_DIR}/RPMS/${AR
 #mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/noarch/*.rpm ${OUT_DIR}/RPMS/noarch/
 
 # CLEAN
-#rm -rf ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
+rm -rf ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
