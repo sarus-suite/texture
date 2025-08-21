@@ -20,7 +20,7 @@ PRODUCT='sarus-suite'
 BUILD_OS_NAME='opensuse'
 BUILD_OS_VERSION_ID='15.5'
 BUILD_OS="${BUILD_OS_NAME}-${BUILD_OS_VERSION_ID}"
-VERSION=$(git describe --tags --always)
+VERSION=$(git describe --tags --always | tr '-' '_')
 RELEASE="0.${BUILD_OS_NAME}.${BUILD_OS_VERSION_ID}"
 mkdir -p ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
 cd ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
@@ -77,7 +77,7 @@ cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
 
-podman run --rm -ti -v ${SRC_DIR}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/${BUILD_OS}/build_in_container.sh
+podman run --rm -ti -v ${SRC_DIR}/${BUILD_OS}/${PRODUCT}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/build_in_container.sh
 
 # INSTALL
 OUT_DIR="${ARTIFACTS_DIR}/packages/${BUILD_OS}"
