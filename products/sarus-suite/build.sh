@@ -26,13 +26,35 @@ mkdir -p ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
 cd ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
 
 function get_artifacts_versions() {
+  unset CONMON_VERSION	
+  unset CRUN_VERSION	
+  unset PARALLAX_VERSION	
   unset PODMAN_VERSION	
-  unset SQUASHFUSE_VERSION  
+  unset SQUASHFUSE_VERSION 
+  CONMON_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^conmon-\([[:digit:]].*\).$ARCH.rpm$/\1/p")
+  CRUN_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^crun-\([[:digit:]].*\).$ARCH.rpm$/\1/p")
+  PODMAN_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^podman-\([[:digit:]].*\).$ARCH.rpm$/\1/p")
+  PARALLAX_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^parallax-\(v[[:digit:]].*\).$ARCH.rpm$/\1/p")
   PODMAN_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^podman-\([[:digit:]].*\).$ARCH.rpm$/\1/p")
   SQUASHFUSE_VERSION=$(ls ${ARTIFACTS_DIR}/packages/${BUILD_OS}/RPMS/${ARCH}/ | sed -n "s/^squashfuse-\([[:digit:]].*\).$ARCH.rpm$/\1/p")
 }
 
 function check_artifacts_versions() {
+  if [ -z "${CONMON_VERSION}" ]
+  then
+    echo "Error: Cannot find \$CONMON_VERSION, build conmon in advance."
+    return 1
+  fi
+  if [ -z "${CRUN_VERSION}" ]
+  then
+    echo "Error: Cannot find \$CRUN_VERSION, build crun in advance."
+    return 1
+  fi
+  if [ -z "${PARALLAX_VERSION}" ]
+  then
+    echo "Error: Cannot find \$PARALLAX_VERSION, build parallax in advance."
+    return 1
+  fi
   if [ -z "${PODMAN_VERSION}" ]
   then
     echo "Error: Cannot find \$PODMAN_VERSION, build podman in advance."
@@ -54,6 +76,9 @@ cat >${INPUT_FILE} <<EOF
 {
   "version": "${VERSION}",
   "release": "${RELEASE}",
+  "conmon_version": "${CONMON_VERSION}",
+  "crun_version": "${CRUN_VERSION}",
+  "parallax_version": "${PARALLAX_VERSION}",
   "podman_version": "${PODMAN_VERSION}",
   "squashfuse_version": "${SQUASHFUSE_VERSION}"
 }
