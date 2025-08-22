@@ -7,10 +7,6 @@
     $ OS_NAME=$(echo $ID | sed 's/-leap$//')
     $ ARCH=$(uname -m)
 
-    # Add repository to install opensuse dependencies (i.e. passt)
-    $ zypper addrepo https://download.opensuse.org/repositories/Virtualization:containers/${VERSION_ID}/Virtualization:containers.repo
-    $ zypper --gpg-auto-import-keys refresh
-
     # Add local repository for sarus-suite
     $ zypper install -y createrepo_c tar gzip
     $ cd ~
