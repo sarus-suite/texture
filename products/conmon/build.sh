@@ -12,6 +12,9 @@ cd $SCRIPT_DIR
 . ${SCRIPT_DIR}/etc/system.cfg
 . ${SCRIPT_DIR}/lib/common.sh
 
+# BUILD Dependencies
+build_venv_j2cli
+
 if [ -z "$CONMON_VERSION" ]
 then
   CONMON_VERSION=$(get_github_repo_latest_release containers/conmon)

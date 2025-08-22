@@ -92,10 +92,10 @@ deactivate
 
 cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
-cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
+cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_rpm_in_container.sh ./build_rpm_in_container.sh
 cp ${BIN} ./${PRODUCT}
 
-podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/${BUILD_OS}/${PRODUCT}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/build_in_container.sh
+podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/${BUILD_OS}/${PRODUCT}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/build_rpm_in_container.sh
 
 # INSTALL
 OUT_DIR="${ARTIFACTS_DIR}/packages/${BUILD_OS}"
