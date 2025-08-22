@@ -9,7 +9,7 @@ ln -s /usr/bin/rpmdev-spectool /usr/bin/spectool
 
 REPO="podman"
 GIT_REPO_URL="https://github.com/containers/${REPO}.git"
-GIT_BRANCH="v${PODMAN_VERSION}"
+GIT_BRANCH="${PODMAN_VERSION}"
 GIT_COMMIT=""
 
 # FETCH
