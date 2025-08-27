@@ -1,0 +1,8 @@
+[storage]
+driver = "overlay"
+runroot = "/dev/shm/$USER/runroot"
+graphroot = "/dev/shm/$USER/root"
+
+[storage.options.overlay]
+mount_program = "{{ overlayfs_program }}"
+

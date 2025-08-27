@@ -110,8 +110,23 @@ mkdir -p ${OUT_DIR}/SRPMS
 mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/SRPMS/*.rpm ${OUT_DIR}/SRPMS/
 mkdir -p ${OUT_DIR}/RPMS/${ARCH}
 mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/${ARCH}/*.rpm ${OUT_DIR}/RPMS/${ARCH}/
+
 #mkdir -p ${OUT_DIR}/RPMS/noarch
 #mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/noarch/*.rpm ${OUT_DIR}/RPMS/noarch/
+
+OUT_DIR="${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/bin"
+mkdir -p ${OUT_DIR}
+cp ${SRC_DIR}/j2 ${OUT_DIR}/
+
+OUT_DIR="${ARTIFACTS_DIR}"
+mkdir -p ${OUT_DIR}
+cp ${SRC_DIR}/setup ${OUT_DIR}/
+
+OUT_DIR="${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/lib/templates"
+mkdir -p ${OUT_DIR}
+cp ${THIS_DIR}/src/templates/containers.conf.base.j2 ${OUT_DIR}/
+cp ${THIS_DIR}/src/templates/containers.conf.hpc.j2 ${OUT_DIR}/
+cp ${THIS_DIR}/src/templates/storage.conf.base.j2 ${OUT_DIR}/
 
 # CLEAN
 rm -rf ${SRC_DIR}/${BUILD_OS}/${PRODUCT}

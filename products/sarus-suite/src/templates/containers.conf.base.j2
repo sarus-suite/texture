@@ -1,0 +1,9 @@
+[engine]
+runtime = "crun"
+cgroup_manager = "cgroupfs"
+conmon_path = ["{{ conmon_program }}"]
+compression_format = "zstd"
+
+[engine.runtimes]
+crun = ["{{ crun_program }}"]
+

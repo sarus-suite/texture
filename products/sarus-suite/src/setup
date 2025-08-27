@@ -1,0 +1,87 @@
+#!/usr/bin/bash
+
+set -e
+
+SCRIPTNAME="$(basename $0)"
+
+function print_help() {
+  cat <<EOF
+
+  Usage: $SCRIPTNAME <OPTIONS>
+  
+  Options:
+    --userspace|-u : setup a testing environment in userspace
+
+EOF
+}
+
+function end() {
+  local MSG="$1"
+  local RC="$2"
+  echo "$MSG"
+  return ${RC}  
+}
+
+function fail() {
+  end "$1" 1
+  return $?
+}
+
+function detect_system() {
+  [ ! -f /etc/os-release ] && fail "ERROR: Cannot detect linux distribution"
+  . /etc/os-release
+
+  if [ "$ID_LIKE" == "suse" ]
+  then
+    OS_NAME="opensuse"
+  else
+    fail "ERROR: Not a suse linux system. Unsupported."  
+  fi
+  
+  ARCH=$(uname -m)
+}
+
+function parse_args() {
+
+  [ $# -eq 0 ] && return
+
+  case "$1" in
+    "--userspace"|"-u")
+      USERSPACE="yes"
+      shift
+      ;;
+    "--help"|"-h")
+      print_help
+      exit 0      
+      ;;
+    *)
+     echo "ERROR: unrecognized option: \"$1\""
+     print_help
+     exit 1
+     ;;
+  esac
+}
+
+function check_input() {
+  # Set defaults	
+  if [ -z "${USERSPACE}" ]
+  then
+    USERSPACE='yes'
+  fi
+}
+
+function userspace_setup() {
+  URL=https://github.com/sarus-suite/texture/releases/latest/download/sarus-suite-${OS_NAME}-${VERSION_ID}-${ARCH}.tar.gz
+  curl -sOL ${URL}
+  tar xzf ./sarus-suite-${OS_NAME}-${VERSION_ID}-${ARCH}.tar.gz
+}
+
+detect_system
+parse_args $@
+check_input
+
+if [ "$USERSPACE" == "yes" ]
+then
+  userspace_setup	
+fi
+
