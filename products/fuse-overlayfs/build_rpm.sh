@@ -5,28 +5,23 @@
 
 THIS_DIR=$(readlink -f $(dirname $0))
 SCRIPT_DIR=$(readlink -f ${THIS_DIR}/../../)
-TMP_DIR="${SCRIPT_DIR}/tmp"
-SRC_DIR="${TMP_DIR}/src"
-ARTIFACTS_DIR="${SCRIPT_DIR}/artifacts"
+PRODUCT=$(basename ${THIS_DIR})
 SARUS_SUITE_DIR='sarus-suite'
-BASE_URL="https://github.com/containers/fuse-overlayfs/releases/download"
 cd $SCRIPT_DIR
+
+. lib/common.sh
+check_build_os || exit 1
+create_tmp_folders
 
 . ${SCRIPT_DIR}/etc/release.cfg
 . ${SCRIPT_DIR}/etc/system.cfg
-. ${SCRIPT_DIR}/lib/common.sh
-
-#BUILD DEPENDENCIES
-build_venv_j2cli
 
 # BUILD
-PRODUCT='fuse-overlayfs'
-BUILD_OS_NAME='opensuse'
-BUILD_OS_VERSION_ID='15.5'
-BUILD_OS="${BUILD_OS_NAME}-${BUILD_OS_VERSION_ID}"
-BIN="${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/bin/${PRODUCT}"
-mkdir -p ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
-cd ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
+SRC_DIR="${BUILD_DIR}/${PRODUCT}/src"
+BIN="${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/${PRODUCT}"
+
+mkdir -p ${SRC_DIR}
+cd ${SRC_DIR}
 
 if [ "$ARCH" == "x86_64" ]
 then
@@ -61,9 +56,12 @@ function check_artifacts_versions() {
 get_artifacts_versions
 check_artifacts_versions || exit 1
 
+mkdir -p ${SRC_DIR}/rpmbuild
+cd ${SRC_DIR}/rpmbuild
+
 VERSION=${FUSEOVERLAYFS_VERSION}
-RELEASE="0.${BUILD_OS_NAME}.${BUILD_OS_VERSION_ID}"
-INPUT_FILE="${SRC_DIR}/${BUILD_OS}/${PRODUCT}/input.json"
+RELEASE="0.${BUILD_OS_NAME}.${BUILD_OS_VERSION}"
+INPUT_FILE="${SRC_DIR}/rpmbuild/input.json"
 
 cat >${INPUT_FILE} <<EOF
 {
@@ -75,7 +73,7 @@ cat >${INPUT_FILE} <<EOF
 }
 EOF
 
-CUSTOM_FILE="${SRC_DIR}/${BUILD_OS}/${PRODUCT}/custom.py"
+CUSTOM_FILE="${SRC_DIR}/rpmbuild/custom.py"
 cat >${CUSTOM_FILE} <<EOF
 def j2_environment_params():
     return dict(
@@ -85,23 +83,21 @@ def j2_environment_params():
     )
 EOF
 
-source ${TMP_DIR}/venv/bin/activate
-j2 --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/${BUILD_OS_NAME}/${PRODUCT}.spec.j2 ${INPUT_FILE} > ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/${PRODUCT}.spec
-deactivate
+j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/${BUILD_OS_NAME}/${PRODUCT}.spec.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/${PRODUCT}.spec
 
 cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_rpm_in_container.sh ./build_rpm_in_container.sh
 cp ${BIN} ./${PRODUCT}
 
-podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/${BUILD_OS}/${PRODUCT}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/build_rpm_in_container.sh
+podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_rpm_in_container.sh
 
 # INSTALL
-OUT_DIR="${ARTIFACTS_DIR}/packages/${BUILD_OS}"
+OUT_DIR="${PACKAGES_DIR}"
 mkdir -p ${OUT_DIR}/SRPMS
-mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/SRPMS/*.rpm ${OUT_DIR}/SRPMS/
+mv ${SRC_DIR}/rpmbuild/rpm/SRPMS/*.rpm ${OUT_DIR}/SRPMS/
 mkdir -p ${OUT_DIR}/RPMS/${ARCH}
-mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/${ARCH}/*.rpm ${OUT_DIR}/RPMS/${ARCH}/
+mv ${SRC_DIR}/rpmbuild/rpm/RPMS/${ARCH}/*.rpm ${OUT_DIR}/RPMS/${ARCH}/
 
 # CLEAN
-rm -rf ${SRC_DIR}/${BUILD_OS}/${PRODUCT}
+rm -rf ${SRC_DIR}
