@@ -100,6 +100,10 @@ deactivate
 
 cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
+cp ${THIS_DIR}/src/j2 ./
+cp ${THIS_DIR}/src/sarus_env ./
+cp ${THIS_DIR}/src/sarusmgr ./
+cp -a ${THIS_DIR}/src/templates ./
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
 
 podman run --rm -ti -v ${SRC_DIR}/${BUILD_OS}/${PRODUCT}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION_ID} /tmp/build_in_container.sh
@@ -116,17 +120,22 @@ mv ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/rpm/RPMS/${ARCH}/*.rpm ${OUT_DIR}/RPMS/${AR
 
 OUT_DIR="${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/bin"
 mkdir -p ${OUT_DIR}
-cp ${SRC_DIR}/j2 ${OUT_DIR}/
+cp ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/j2 ${OUT_DIR}/
+cp ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/sarusmgr ${OUT_DIR}/
 
 OUT_DIR="${ARTIFACTS_DIR}"
 mkdir -p ${OUT_DIR}
-cp ${SRC_DIR}/setup ${OUT_DIR}/
+cp ${THIS_DIR}/src/setup ${OUT_DIR}/
+
+OUT_DIR="${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/lib"
+mkdir -p ${OUT_DIR}
+cp ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/sarus_env ${OUT_DIR}/
 
 OUT_DIR="${ARTIFACTS_DIR}/${SARUS_SUITE_DIR}/lib/templates"
 mkdir -p ${OUT_DIR}
-cp ${THIS_DIR}/src/templates/containers.conf.base.j2 ${OUT_DIR}/
-cp ${THIS_DIR}/src/templates/containers.conf.hpc.j2 ${OUT_DIR}/
-cp ${THIS_DIR}/src/templates/storage.conf.base.j2 ${OUT_DIR}/
+cp ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/templates/containers.conf.base.j2 ${OUT_DIR}/
+cp ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/templates/containers.conf.hpc.j2 ${OUT_DIR}/
+cp ${SRC_DIR}/${BUILD_OS}/${PRODUCT}/templates/storage.conf.base.j2 ${OUT_DIR}/
 
 # CLEAN
 rm -rf ${SRC_DIR}/${BUILD_OS}/${PRODUCT}

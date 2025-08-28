@@ -1,0 +1,26 @@
+%define debug_package %{nil}
+
+Name:     {{ product }}
+Version:  {{ version }}
+Release:  {{ release }}
+Summary:  FUSE filesystem for containers.
+
+License:  GPL-2.0-only
+URL:      https://github.com/containers/%{name}
+
+%description
+%{summary}.
+
+%prep 
+
+%build
+
+%install
+mkdir -p %{buildroot}{{ bindir }}
+cp {{ bin }} %{buildroot}{{ bindir }}/%{name}
+
+%clean
+
+%files
+%dir {{ bindir }}
+{{ bindir }}/%{name}
