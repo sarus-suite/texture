@@ -21,15 +21,15 @@ jobs:
           ./build.sh && \
           echo "ARCH=$(uname -m)" >> $GITHUB_ENV
 
-      - name: Bundle
-        run: |
-          cd ${{ github.workspace }}
-          mkdir -p artifacts/sarus-suite
-          cd artifacts/sarus-suite
-          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/noarch/*.rpm ./
-          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
-          cd ..
-          tar cvzf ./sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz sarus-suite/
+#      - name: Bundle
+#        run: |
+#          cd ${{ github.workspace }}
+#          mkdir -p artifacts/sarus-suite
+#          cd artifacts/sarus-suite
+#          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/noarch/*.rpm ./
+#          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
+#          cd ..
+#          tar cvzf ./sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz sarus-suite/
       
 #     - name: Upload bundle as artifact
 #        uses: actions/upload-artifact@v4
@@ -52,7 +52,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
-          artifacts: "artifacts/sarus-suite-*.tar.gz"
+          artifacts: "tmp/artifacts/*"
           allowUpdates: true
           replacesArtifacts: false
           draft: false
