@@ -5,6 +5,8 @@ cd $(dirname $0)
 . ./release.cfg
 . ./system.cfg
 
+ARCH=$(uname -m)
+
 if [ "$ARCH" == "x86_64" ]
 then
   GOARCH="amd64"

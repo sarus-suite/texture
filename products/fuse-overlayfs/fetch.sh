@@ -13,28 +13,21 @@ create_tmp_folders
 . ${SCRIPT_DIR}/etc/release.cfg
 . ${SCRIPT_DIR}/etc/system.cfg
 
-if [ "$ARCH" == "x86_64" ]
-then
-  GARCH="amd64"
-else
-  GARCH="$ARCH"
-fi
-
 DOWNLOAD_DIR="${TMP_DIR}/download"
-REPO="containers/crun"
+REPO="containers/${PRODUCT}"
 BASE_URL="https://github.com/${REPO}/releases/download"
 
-if [ -z "$CRUN_VERSION" ]
+if [ -z "$FUSEOVERLAYFS_VERSION" ]
 then
-  CRUN_VERSION=$(get_github_repo_latest_release ${REPO})
+  FUSEOVERLAYFS_VERSION=$(get_github_repo_latest_release ${REPO})
 fi
 
-CRUN_URL="${BASE_URL}/${CRUN_VERSION}/crun-${CRUN_VERSION}-linux-${GARCH}"
+FUSEOVERLAYFS_URL="${BASE_URL}/${FUSEOVERLAYFS_VERSION}/fuse-overlayfs-${ARCH}"
 mkdir -p ${DOWNLOAD_DIR}
 cd ${DOWNLOAD_DIR}
-curl -sOL ${CRUN_URL}
+curl -sOL ${FUSEOVERLAYFS_URL}
 
 # INSTALL
 mkdir -p ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin
-mv ${DOWNLOAD_DIR}/crun-${CRUN_VERSION}-linux-${GARCH} ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/crun
-chmod +x ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/crun
+mv fuse-overlayfs-${ARCH} ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/fuse-overlayfs
+chmod +x ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/fuse-overlayfs

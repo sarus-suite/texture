@@ -1,0 +1,29 @@
+#!/usr/bin/bash
+
+THIS_DIR=$(readlink -f $(dirname $0))
+SARUS_SUITE_DIR=$(readlink -f "${THIS_DIR}/..")
+
+function build_venv_j2cli() {
+  pushd $SARUS_SUITE_DIR >/dev/null
+
+  if [ ! -f ./tmp/venv/bin/activate ]
+  then
+    # jinja2-cli
+    mkdir -p ./tmp
+    python3 -m venv tmp/venv
+    source tmp/venv/bin/activate
+    python3 -m pip install --upgrade pip &>/dev/null
+    pip install j2cli &>/dev/null
+  fi
+
+  popd >/dev/null
+}
+
+function wrapper_j2cli() {
+  source ${SARUS_SUITE_DIR}/tmp/venv/bin/activate
+  j2 $@
+  deactivate  
+}
+
+build_venv_j2cli
+wrapper_j2cli $@

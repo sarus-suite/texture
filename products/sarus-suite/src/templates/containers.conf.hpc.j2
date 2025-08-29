@@ -1,0 +1,28 @@
+[containers]
+ipcns = "host"
+netns = "host"
+pidns = "host"
+utsns = "host"
+userns = "keep-id"
+cgroupns = "host"
+cgroups = "no-conmon"
+
+{% if hpc_devices|length > 0 -%}
+# Defining default devices in this way is still not optimal:
+#  - Does not provide a way to manage different default devices across multi-arch clusters,
+#    e.g. some GPU nodes where GPUs should be enabled, and some CPU-only nodes where requesting
+#    a GPU device would error out.
+#  - Does not provide a convenient interface for users to de-select devices enabled by default
+devices = [{% for device in hpc_devices %}{{ device }}{% endfor %}, {append=true}]
+{% endif -%}
+
+# Mounting /tmp as a temporary measure to propagate Slurm PMIx dirs until we have dedicated hook
+mounts = ["type=bind,src=/tmp,dst=/tmp"]
+
+[engine]
+runtime = "crun"
+conmon_path = ["{{ conmon_program }}"]
+
+[engine.runtimes]
+crun = ["{{ crun_program }}"]
+

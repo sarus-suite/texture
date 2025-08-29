@@ -1,0 +1,68 @@
+#!/bin/bash
+
+function get_sarus_env_status() {
+  if [ -n "$CONTAINERS_CONF" ]
+  then
+    if [ "$CONTAINERS_CONF" == "${SARUS_PATH}/etc/containers.conf" ]
+    then
+      echo "active"
+      return 0
+    fi
+  fi
+  echo "inactive"
+  return 0
+}
+
+function sarus_env_activate() {
+  SARUS_PATH=$(dirname $(dirname $(readlink -f "${BASH_SOURCE[0]}")))
+  
+  if [ -n "$CONTAINERS_CONF" ]
+  then
+    if [ "$CONTAINERS_CONF" == "${SARUS_PATH}/etc/containers.conf" ]
+    then
+      echo "Sarus environment is already active."
+      return 0
+    fi
+    export CONTAINERS_CONF_ORIG=$CONTAINERS_CONF
+  fi
+
+  if [ -n "$PATH" ]
+  then
+    export PATH_ORIG=$PATH
+  fi
+
+  export CONTAINERS_CONF="${SARUS_PATH}/etc/containers.conf"
+  export PATH="${SARUS_PATH}/bin:${PATH}"
+}
+
+function sarus_env_deactivate() {
+  SARUS_PATH=$(dirname $(dirname $(readlink -f "${BASH_SOURCE[0]}")))
+
+  if [ -n "$CONTAINERS_CONF" ]
+  then
+  if [ "$CONTAINERS_CONF" != "${SARUS_PATH}/etc/containers.conf" ]
+    then
+      echo "Sarus environment is already inactive."
+      return 0
+    else
+      unset CONTAINERS_CONF
+    fi
+  else
+    echo "Sarus environment is already inactive."
+    return 0
+  fi
+
+  if [ -n "$PATH_ORIG" ]
+  then
+    export PATH=$PATH_ORIG
+    unset PATH_ORIG
+  fi
+
+  if [ -n "$CONTAINERS_CONF_ORIG" ]
+  then
+    export CONTAINERS_CONF=$CONTAINERS_CONF_ORIG
+    unset CONTAINERS_CONF_ORIG
+  fi
+}
+
+[ "$(get_sarus_env_status)" == "inactive" ] && sarus_env_activate

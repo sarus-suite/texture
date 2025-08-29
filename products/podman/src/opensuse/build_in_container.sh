@@ -7,13 +7,12 @@ ln -s /usr/bin/rpmdev-spectool /usr/bin/spectool
 . ./release.cfg
 . ./system.cfg
 
-REPO="podman"
-GIT_REPO_URL="https://github.com/containers/${REPO}.git"
+GIT_REPO_URL="https://github.com/containers/${PRODUCT}.git"
 GIT_BRANCH="${PODMAN_VERSION}"
 GIT_COMMIT=""
 
 # FETCH
-rm -rf ${REPO}
+rm -rf ${PRODUCT}
 
 if [ -n "$GIT_BRANCH" ]
 then
@@ -22,17 +21,15 @@ else
   GIT_BRANCH_OPT=""
 fi
 
-git clone ${GIT_BRANCH_OPT} ${GIT_REPO_URL} ${REPO}
-cd ${REPO}
+git clone ${GIT_BRANCH_OPT} ${GIT_REPO_URL} ${PRODUCT}
+cd ${PRODUCT}
 
 if [ -n "$GIT_COMMIT" ]
 then
   git checkout ${GIT_COMMIT}
 fi
 
-cd ..
-cp ./podman.spec ${REPO}/rpm/podman.spec
-cp ./podman.conf ${REPO}/rpm/podman.conf
+cp ../podman.spec rpm/podman.spec
+cp ../podman.conf rpm/podman.conf
 
-cd ${REPO}
 make rpm

@@ -1,0 +1,182 @@
+#!/usr/bin/bash
+
+set -e
+
+SCRIPTNAME="$(basename $0)"
+THIS_DIR="$(readlink -f $(dirname $0))"
+BASE_DIR="$(dirname ${THIS_DIR})"
+TMP_DIR="${BASE_DIR}/tmp"
+
+function print_help() {
+  cat <<EOF
+
+  Usage: $SCRIPTNAME <COMMAND>
+  
+  Commands:
+    configure : configure sarus-suite for the local system
+
+EOF
+}
+
+function end() {
+  local MSG="$1"
+  local RC="$2"
+  echo "$MSG"
+  return ${RC}  
+}
+
+function fail() {
+  end "$1" 1
+  return $?
+}
+
+function detect_system() {
+  [ ! -f /etc/os-release ] && fail "ERROR: Cannot detect linux distribution"
+  . /etc/os-release
+
+  if [ "$ID_LIKE" == "suse" ]
+  then
+    OS_NAME="opensuse"
+    OS="${OS_NAME}-${VERSION_ID}"
+  else
+    fail "ERROR: Not a suse linux system. Unsupported."  
+  fi
+  
+  ARCH=$(uname -m)
+}
+
+function parse_args() {
+
+  [ $# -eq 0 ] && return
+
+  # DETECT COMMAND
+  case "$1" in
+    "configure")
+      COMMAND="$1"
+      shift
+      ARGS=$@
+      ;;
+    "--help"|"-h")
+      print_help
+      exit 0      
+      ;;
+    *)
+     echo "ERROR: unrecognized command: \"$1\""
+     print_help
+     exit 1
+     ;;
+  esac
+}
+
+function check_input() {
+
+  if [ -z "${COMMAND}" ]
+  then
+    echo "ERROR: No command specified"    	  
+    print_help
+    exit 1
+  fi
+
+  # Set defaults	
+}
+
+function check_dependencies() {
+  for cmd in which curl tar rpm2cpio cpio
+  do
+    set +e
+    OUTPUT=$(which $cmd 2>/dev/null)	
+    RC=$?
+    set -e
+    [ $RC -ne 0 ] && fail "ERROR: missing $cmd command"
+  done
+
+  if [ ! -d "${TMP_DIR}" ]
+  then
+    mkdir -p "${TMP_DIR}"	  
+  fi	  
+}
+
+function configure() {
+  ETC_DIR="${BASE_DIR}/etc"
+  LIB_DIR="${BASE_DIR}/lib"  
+  TEMPLATES_DIR="${LIB_DIR}/templates"
+
+  # Check directory existence
+  if [ ! -d "${TEMPLATES_DIR}" ]
+  then
+    fail "ERROR: Missing lib/templates directory"	
+  fi	  
+  
+  # Check j2 existence
+  if [ ! -x "${THIS_DIR}/j2" ]
+  then
+    fail "ERROR: Missing j2 executable"	
+  fi
+
+  # Check Userspace
+  if [ "$UID" -ne 0 ]
+  then
+    USERSPACE="yes"	  
+  fi
+
+  if [ "$USERSPACE" == "yes" ]
+  then
+    CONMON_PROGRAM="${BASE_DIR}/bin/conmon"	  
+    CRUN_PROGRAM="${BASE_DIR}/bin/crun"	  
+    HPC_DEVICES=""
+    OVERLAYFS_PROGRAM="${BASE_DIR}/bin/fuse-overlayfs"
+  else
+    fail "ERROR: System-wide configuration is currently unsupported"	
+  fi
+
+  # Generate input file from system
+  mkdir -p "${TMP_DIR}/templates"
+  INPUT_FILE="${TMP_DIR}/templates/input.json"
+
+  cat >${INPUT_FILE} <<EOF
+{
+  "conmon_program": "${CONMON_PROGRAM}",
+  "crun_program": "${CRUN_PROGRAM}",
+  "hpc_devices": [${HPC_DEVICES}],
+  "overlayfs_program": "${OVERLAYFS_PROGRAM}"
+}
+EOF
+
+  CUSTOM_FILE="${TMP_DIR}/templates/custom.py"
+  cat >${CUSTOM_FILE} <<EOF
+def j2_environment_params():
+    return dict(
+        # Remove whitespace around blocks
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
+EOF
+
+  # Check template files existence and then generate configuration
+  for template in containers.conf.base.j2 containers.conf.hpc.j2 storage.conf.base.j2
+  do
+    if [ ! -f "${TEMPLATES_DIR}/$template" ]
+    then
+      fail "ERROR: Missing $template file at ${TEMPLATES_DIR}"	
+    fi	    
+  done
+  mkdir -p "${ETC_DIR}/containers.conf.modules"
+  ${THIS_DIR}/j2 --customize ${CUSTOM_FILE} -f json ${TEMPLATES_DIR}/containers.conf.base.j2 ${INPUT_FILE} > ${ETC_DIR}/containers.conf
+  ${THIS_DIR}/j2 --customize ${CUSTOM_FILE} -f json ${TEMPLATES_DIR}/storage.conf.base.j2 ${INPUT_FILE} > ${ETC_DIR}/storage.conf
+  ${THIS_DIR}/j2 --customize ${CUSTOM_FILE} -f json ${TEMPLATES_DIR}/containers.conf.hpc.j2 ${INPUT_FILE} > ${ETC_DIR}/containers.conf.modules/hpc
+  
+}
+
+function run_command() {
+  case $COMMAND in
+    "configure")
+      configure ${ARGS}
+      ;;      
+  esac	  
+}
+
+detect_system
+check_dependencies
+parse_args $@
+check_input
+run_command

@@ -41,27 +41,25 @@ then
   fi
 fi
 
+function get_artifacts_versions() {
+  unset FUSEOVERLAYFS_VERSION
+  FUSEOVERLAYFS_VERSION=$(${BIN} --version | awk '/fuse-overlayfs: version /{print $NF}')
+}
+
 function check_artifacts_versions() {
-  if [ -z "${PARALLAX_VERSION}" ]
+  if [ -z "${FUSEOVERLAYFS_VERSION}" ]
   then
-    # setting the latest release
-    # TODO: FIX IT after https://github.com/sarus-suite/parallax/issues/22
-    REPO="sarus-suite/${PRODUCT}"
-    PARALLAX_VERSION=$(get_github_repo_latest_release ${REPO})
-    if [ -z "${PARALLAX_VERSION}" ]
-    then
-      echo "Error: Cannot find \$PARALLAX_VERSION."
-      return 1
-    fi
+    echo "Error: Cannot find \$FUSEOVERLAYFS_VERSION, fetch fuse-overlayfs in advance."
+    return 1
   fi
 }
-#get_artifacts_versions
+get_artifacts_versions
 check_artifacts_versions || exit 1
 
 mkdir -p ${SRC_DIR}/rpmbuild
 cd ${SRC_DIR}/rpmbuild
 
-VERSION=${PARALLAX_VERSION}
+VERSION=${FUSEOVERLAYFS_VERSION}
 RELEASE="0.${BUILD_OS_NAME}.${BUILD_OS_VERSION}"
 INPUT_FILE="${SRC_DIR}/rpmbuild/input.json"
 
@@ -71,7 +69,7 @@ cat >${INPUT_FILE} <<EOF
   "version": "${VERSION}",
   "release": "${RELEASE}",
   "bindir": "/opt/${SARUS_SUITE_DIR}/bin",
-  "srcdir": "/tmp"
+  "bin": "/tmp/${PRODUCT}"
 }
 EOF
 
@@ -91,7 +89,6 @@ cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_rpm_in_container.sh ./build_rpm_in_container.sh
 cp ${BIN} ./${PRODUCT}
-cp ${BIN}-mount-program.sh ./${PRODUCT}-mount-program.sh
 
 podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_rpm_in_container.sh
 
