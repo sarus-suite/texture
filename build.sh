@@ -120,6 +120,8 @@ do
   fi
 done
 
+exit 0
+
 PRODUCT="sarus-suite"
 echo "Building ${SARUS_SUITE} RPM ..."
 echo

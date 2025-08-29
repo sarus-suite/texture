@@ -34,7 +34,7 @@ mkdir -p ${DOWNLOAD_DIR}/${ARCH}
 cd ${DOWNLOAD_DIR}/${ARCH}
 curl -sOL ${URL}
 
-URL="${BASE_URL}/${BUILD_OS_VERSION_ID}/noarch/${PASST_APPARMOR_RPM}"
+URL="${BASE_URL}/${BUILD_OS_VERSION}/noarch/${PASST_APPARMOR_RPM}"
 mkdir -p ${DOWNLOAD_DIR}/noarch
 cd ${DOWNLOAD_DIR}/noarch
 curl -sOL ${URL}

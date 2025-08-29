@@ -9,4 +9,4 @@ zypper --non-interactive install rpm-build
 ARCH="$(uname -m)"
 test -e $ARCH || ln -s . $ARCH
 mkdir -p ${PWD}/rpm
-rpmbuild --target=$ARCH --clean -ba -D"_topdir ${PWD}/rpm"  ./sarus-suite.spec
+rpmbuild --target=$ARCH --clean -ba -D"_topdir ${PWD}/rpm"  ./${PRODUCT}.spec

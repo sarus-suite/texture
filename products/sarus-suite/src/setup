@@ -10,6 +10,8 @@ function print_help() {
   Usage: $SCRIPTNAME <OPTIONS>
   
   Options:
+    --install|-i   : install packages on the system
+
     --userspace|-u : setup a testing environment in userspace
 
 EOF
@@ -31,7 +33,7 @@ function detect_system() {
   [ ! -f /etc/os-release ] && fail "ERROR: Cannot detect linux distribution"
   . /etc/os-release
 
-  if [ "$ID_LIKE" == "suse" ]
+  if ( echo " $ID_LIKE " | grep -q " suse " )
   then
     OS_NAME="opensuse"
   else
@@ -50,6 +52,10 @@ function parse_args() {
       USERSPACE="yes"
       shift
       ;;
+    "--install"|"-i")
+      INSTALL_PACKAGES="yes"
+      shift
+      ;;
     "--help"|"-h")
       print_help
       exit 0      
@@ -63,17 +69,64 @@ function parse_args() {
 }
 
 function check_input() {
+  if [ "$USERSPACE" == 'yes' ] && [ "$INSTALL_PACKAGES" == 'yes' ]
+  then
+    echo "ERROR: --userspace and --install options are mutually exclusive, choose one of the two."
+    print_help
+    return 1
+  fi
+
   # Set defaults	
-  if [ -z "${USERSPACE}" ]
+  if [ "$INSTALL_PACKAGES" != 'yes' ] && [ -z "${USERSPACE}" ] && [ "$UID" -ne 0 ] 
   then
     USERSPACE='yes'
+  fi
+  if [ "$USERSPACE" != 'yes' ] && [ -z "${INSTALL_PACKAGES}" ] && [ "$UID" -eq 0 ] 
+  then
+    INSTALL_PACKAGES='yes'
   fi
 }
 
 function userspace_setup() {
-  URL=https://github.com/sarus-suite/texture/releases/latest/download/sarus-suite-${OS_NAME}-${VERSION_ID}-${ARCH}.tar.gz
-  curl -sOL ${URL}
-  tar xzf ./sarus-suite-${OS_NAME}-${VERSION_ID}-${ARCH}.tar.gz
+  ARTIFACT="sarus-suite-${OS_NAME}-${VERSION_ID}-${ARCH}-userspace.tar.gz"	
+  if [ ! -f "${ARTIFACT}" ]
+  then
+    URL="https://github.com/sarus-suite/texture/releases/latest/download/${ARTIFACT}"
+    curl -sOL ${URL}
+  fi  
+  tar xzf ./${ARTIFACT}
+  sarus-suite/bin/sarusmgr configure
+}
+
+function install_packages() {
+  
+  if [ $UID -ne 0 ]
+  then
+    echo "ERROR: --install requires to run as root"
+    return 1
+  fi	  
+  
+  ARTIFACT="sarus-suite-${OS_NAME}-${VERSION_ID}-${ARCH}-packages.tar.gz"	
+  if [ ! -f "${ARTIFACT}" ]
+  then
+    URL="https://github.com/sarus-suite/texture/releases/latest/download/${ARTIFACT}"
+    curl -sOL ${URL}
+  fi  
+  tar xzf ./${ARTIFACT}
+  REPO_PATH=$(readlink -f ${PWD}/sarus-suite)
+  createrepo ${REPO_PATH}
+
+  zypper lr sarus-suite >/dev/null
+  REPO_EXISTS=$?
+  if [ $REPO_EXISTS -eq 0 ]
+  then	  
+    zypper modifyrepo --no-gpgcheck -f file://${REPO_PATH} sarus-suite
+  else  
+    zypper addrepo --no-gpgcheck -f file://${REPO_PATH} sarus-suite
+  fi
+
+  # INSTALL
+  zypper install -y sarus-suite
 }
 
 detect_system
@@ -82,6 +135,9 @@ check_input
 
 if [ "$USERSPACE" == "yes" ]
 then
-  userspace_setup	
+  userspace_setup
+elif [ "$INSTALL_PACKAGES" == "yes" ]
+then
+  install_packages
 fi
 
