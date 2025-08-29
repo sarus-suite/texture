@@ -4,6 +4,10 @@ set -e
 
 SCRIPTNAME="$(basename $0)"
 
+THIS_GIT_TAG="{{ git_tag }}"
+THIS_GIT_BRANCH="{{ git_branch }}"
+THIS_GIT_COMMIT="{{ git_commit }}"
+
 function print_help() {
   cat <<EOF
 
@@ -41,6 +45,44 @@ function detect_system() {
   fi
   
   ARCH=$(uname -m)
+}
+
+function resolve_dependencies() {
+  local TO_INSTALL=""
+  
+  if [ -z "$(which which 2>/dev/null)" ]
+  then
+    TO_INSTALL="which"
+  fi
+
+  if [ -n "${TO_INSTALL}" ]
+  then
+    zypper refresh
+    zypper install -y ${TO_INSTALL}
+    TO_INSTALL=""
+  fi
+  
+  if [ -z "$(which tar 2>/dev/null)" ]
+  then
+    TO_INSTALL="${TO_INSTALL} tar"
+  fi
+  
+  if [ -z "$(which gzip 2>/dev/null)" ]
+  then
+    TO_INSTALL="${TO_INSTALL} gzip"
+  fi
+  
+  if [ -z "$(which createrepo 2>/dev/null)" ]
+  then
+    TO_INSTALL="${TO_INSTALL} createrepo_c"
+  fi
+
+  if [ -n "${TO_INSTALL}" ]
+  then
+    zypper refresh
+    zypper install -y ${TO_INSTALL}
+  fi
+  
 }
 
 function parse_args() {
@@ -106,6 +148,8 @@ function install_packages() {
     return 1
   fi	  
   
+  resolve_dependencies
+  
   ARTIFACT="sarus-suite-${OS_NAME}-${VERSION_ID}-${ARCH}-packages.tar.gz"	
   if [ ! -f "${ARTIFACT}" ]
   then
@@ -114,11 +158,17 @@ function install_packages() {
   fi  
   tar xzf ./${ARTIFACT}
   REPO_PATH=$(readlink -f ${PWD}/sarus-suite)
-  createrepo ${REPO_PATH}
+  if [ ! -d "${REPO_PATH}/repodata" ]
+  then
+    createrepo ${REPO_PATH}
+  fi
 
-  zypper lr sarus-suite >/dev/null
+  set +e
+  zypper lr sarus-suite &>/dev/null
   REPO_EXISTS=$?
-  if [ $REPO_EXISTS -eq 0 ]
+  set -e
+
+  if [ ${REPO_EXISTS} -eq 0 ]
   then	  
     zypper modifyrepo --no-gpgcheck -f file://${REPO_PATH} sarus-suite
   else  

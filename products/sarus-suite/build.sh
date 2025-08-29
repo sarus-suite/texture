@@ -67,6 +67,10 @@ cd ${SRC_DIR}/rpmbuild
 
 INPUT_FILE="${SRC_DIR}/rpmbuild/input.json"
 
+GIT_TAG="$(git describe --exact-match --tags 2>/dev/null)"
+GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+GIT_COMMIT="$(git rev-parse HEAD)"
+
 cat >${INPUT_FILE} <<EOF
 {
   "version": "${VERSION}",
@@ -75,7 +79,10 @@ cat >${INPUT_FILE} <<EOF
   "crun_version": "${CRUN_VERSION}",
   "parallax_version": "${PARALLAX_VERSION}",
   "podman_version": "${PODMAN_VERSION}",
-  "squashfuse_version": "${SQUASHFUSE_VERSION}"
+  "squashfuse_version": "${SQUASHFUSE_VERSION}",
+  "git_tag": "${GIT_TAG}",
+  "git_branch": "${GIT_BRANCH}",
+  "git_commit": "${GIT_COMMIT}"
 }
 EOF
 
@@ -90,12 +97,13 @@ def j2_environment_params():
 EOF
 
 j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/${BUILD_OS_NAME}/${PRODUCT}.spec.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/${PRODUCT}.spec
+j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/sarus_env.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/sarus_env
+j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/sarusmgr.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/sarusmgr
+j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/setup.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/setup
 
 cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
 cp ${THIS_DIR}/src/j2 ./
-cp ${THIS_DIR}/src/sarus_env ./
-cp ${THIS_DIR}/src/sarusmgr ./
 cp -a ${THIS_DIR}/src/templates ./
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
 
@@ -129,7 +137,7 @@ cp ${SRC_DIR}/rpmbuild/templates/storage.conf.base.j2 ${OUT_DIR}/
 # BUNDLE artifacts
 OUT_DIR="${SCRIPT_DIR}/tmp/artifacts"
 mkdir -p ${OUT_DIR}
-cp ${THIS_DIR}/src/setup ${OUT_DIR}/
+cp ${SRC_DIR}/rpmbuild/setup ${OUT_DIR}/
 
 cd ${USERSPACE_DIR}
 tar czf ${OUT_DIR}/${PRODUCT}-${BUILD_OS}-${ARCH}-userspace.tar.gz ./
