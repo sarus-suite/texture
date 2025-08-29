@@ -121,7 +121,7 @@ do
 done
 
 PRODUCT="sarus-suite"
-echo "Building ${SARUS_SUITE} RPM ..."
+echo "Building ${PRODUCT} RPM ..."
 echo
 ${PRODUCT}/build.sh
 RC=$?
