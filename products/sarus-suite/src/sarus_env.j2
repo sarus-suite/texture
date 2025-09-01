@@ -70,6 +70,10 @@ function sarus_env_deactivate() {
     export CONTAINERS_CONF=$CONTAINERS_CONF_ORIG
     unset CONTAINERS_CONF_ORIG
   fi
+
+  unset -f get_sarus_env_status
+  unset -f sarus_env_activate
+  unset -f sarus_env_deactivate
 }
 
 [ "$(get_sarus_env_status)" == "inactive" ] && sarus_env_activate
