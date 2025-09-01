@@ -137,6 +137,7 @@ function userspace_setup() {
     curl -sOL ${URL}
   fi  
   tar xzf ./${ARTIFACT}
+  rm -f ./${ARTIFACT}
   sarus-suite/bin/sarusmgr configure
 }
 
