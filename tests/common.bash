@@ -5,6 +5,7 @@ function setup() {
     TEST_HELPER_DIR=$(readlink -f "$DIR/../../test/test_helper")
     load "${TEST_HELPER_DIR}/bats-support/load"
     load "${TEST_HELPER_DIR}/bats-assert/load"
+    TMP_DIR=$(readlink -f "$DIR/../..")
 }
 
 function log() {
