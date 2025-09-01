@@ -203,7 +203,7 @@ function setup_test_env() {
   then
     pushd ${TMP_DIR} 1>/dev/null
     GIT_REPO_URL="https://github.com/${REPO}.git"
-    git clone ${GIT_REPO_URL} ${PRODUCT}
+    git clone ${GIT_REPO_URL} ${PRODUCT} 2>/dev/null
     popd 1>/dev/null
   fi
 	
@@ -217,9 +217,9 @@ function setup_test_env() {
     if [ ! -d "${TMP_DIR}/test/bats" ]
     then
       pushd ${TMP_DIR} 1>/dev/null
-      git clone https://github.com/bats-core/bats-core.git test/bats
-      git clone https://github.com/bats-core/bats-support.git test/test_helper/bats-support
-      git clone https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert
+      git clone https://github.com/bats-core/bats-core.git test/bats 2>/dev/null
+      git clone https://github.com/bats-core/bats-support.git test/test_helper/bats-support 2>/dev/null
+      git clone https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert 2>/dev/null
       popd 1>/dev/null
     fi
     export PATH="${TMP_DIR}/test/bats/bin:$PATH"
