@@ -6,6 +6,7 @@ function setup() {
     load "${TEST_HELPER_DIR}/bats-support/load"
     load "${TEST_HELPER_DIR}/bats-assert/load"
     TMP_DIR=$(readlink -f "$DIR/../..")
+    bats_require_minimum_version 1.5.0
 }
 
 function log() {
