@@ -29,8 +29,8 @@ function teardown_file() {
   # CHECK IMAGE EXISTENCE
   run -1 podman --root ${GRAPHROOT} --runroot ${RUNROOT} --storage-opt additionalimagestore=${RO_IMAGESTORE} --storage-opt mount_program=${MOUNT_PROGRAM} image exists ${IMAGE_NAME}
 
-  # workaround current parallax issue
-  #run -0 rm -rf ${RO_IMAGESTORE}/overlay-images
+  # workaround current parallax issue 29 - https://github.com/sarus-suite/parallax/issues/29
+  run -0 rm -rf ${RO_IMAGESTORE}/overlay-images
 
   # PULL LOCALLY
   run -0 podman --root ${GRAPHROOT} --runroot ${RUNROOT} pull ${IMAGE_NAME}
