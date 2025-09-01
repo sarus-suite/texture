@@ -100,6 +100,8 @@ j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/${BUILD_OS_NAME}/${PROD
 j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/sarus_env.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/sarus_env
 j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/sarusmgr.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/sarusmgr
 j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/setup.j2 ${INPUT_FILE} > ${SRC_DIR}/rpmbuild/setup
+chmod +x ${SRC_DIR}/rpmbuild/sarusmgr
+chmod +x ${SRC_DIR}/rpmbuild/setup
 
 cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
