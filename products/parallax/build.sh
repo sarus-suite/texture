@@ -10,23 +10,26 @@ cd $SCRIPT_DIR
 check_build_os || exit 1
 create_tmp_folders
 
-. ${SCRIPT_DIR}/etc/release.cfg
-. ${SCRIPT_DIR}/etc/system.cfg
-
 # BUILD
 SRC_DIR="${BUILD_DIR}/${PRODUCT}/src"
 BIN="${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/${PRODUCT}"
-REPO="sarus-suite/${PRODUCT}"
+GITHUB_ORG=$(get_github_org ${PRODUCT}) || exit 1
 
-if [ -z "$PARALLAX_VERSION" ]
+if [ -z "$GIT_TAG" ] && [ -z "${GIT_COMMIT}" ] && [ -z "${GIT_BRANCH}" ] && [ -z "$PARALLAX_VERSION" ]
 then
-  PARALLAX_VERSION=$(get_github_repo_latest_release ${REPO})
+  GIT_TAG=$(get_github_repo_latest_release "${GITHUB_ORG}/${PRODUCT}")
+  PARALLAX_VERSION=${GIT_TAG} 
+elif [ -n "$PARALLAX_VERSION" ]
+then
+  GIT_TAG="${PARALLAX_VERSION}"
+  unset GIT_BRANCH
+  unset GIT_COMMIT   
 fi
 
 mkdir -p ${SRC_DIR}
 cd ${SRC_DIR}
-cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
-cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
+github_fetch_sources ${PRODUCT}
+
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
 podman run --rm -ti -e VERSION=${PARALLAX_VERSION} -v ${SRC_DIR}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_in_container.sh
 

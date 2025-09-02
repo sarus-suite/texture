@@ -10,22 +10,17 @@ cd $SCRIPT_DIR
 check_build_os || exit 1
 create_tmp_folders
 
-. ${SCRIPT_DIR}/etc/release.cfg
-. ${SCRIPT_DIR}/etc/system.cfg
-
 DOWNLOAD_DIR="${TMP_DIR}/download"
-REPO="containers/${PRODUCT}"
-BASE_URL="https://github.com/${REPO}/releases/download"
+GITHUB_ORG=$(get_github_org ${PRODUCT}) || exit 1
 
 if [ -z "$FUSEOVERLAYFS_VERSION" ]
 then
-  FUSEOVERLAYFS_VERSION=$(get_github_repo_latest_release ${REPO})
+  FUSEOVERLAYFS_VERSION=$(get_github_repo_latest_release "${GITHUB_ORG}/${PRODUCT}")
 fi
 
-FUSEOVERLAYFS_URL="${BASE_URL}/${FUSEOVERLAYFS_VERSION}/fuse-overlayfs-${ARCH}"
 mkdir -p ${DOWNLOAD_DIR}
 cd ${DOWNLOAD_DIR}
-curl -sOL ${FUSEOVERLAYFS_URL}
+github_fetch ${PRODUCT} ${FUSEOVERLAYFS_VERSION} fuse-overlayfs-${ARCH} || exit 1
 
 # INSTALL
 mkdir -p ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin

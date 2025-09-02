@@ -2,9 +2,6 @@
 
 cd $(dirname $0)
 
-. ./release.cfg
-. ./system.cfg
-
 ARCH=$(uname -m)
 
 if [ "$ARCH" == "x86_64" ]
@@ -41,31 +38,13 @@ rm "go${GO_VERSION}.linux-${GOARCH}.tar.gz"
 export PATH=$PATH:/usr/local/go/bin
 
 REPO="parallax"
-GIT_REPO_URL="https://github.com/sarus-suite/${REPO}.git"
-
-if [ -n "${VERSION}" ]
-then
-  GIT_BRANCH="${VERSION}"
-fi
-GIT_COMMIT=""
-
-# FETCH
-rm -rf ${REPO}
-
-if [ -n "$GIT_BRANCH" ]
-then
-  GIT_BRANCH_OPT="--branch ${GIT_BRANCH} --depth 1"
-else
-  GIT_BRANCH_OPT=""
-fi
-
-git clone ${GIT_BRANCH_OPT} ${GIT_REPO_URL} ${REPO}
 cd ${REPO}
 
-if [ -n "$GIT_COMMIT" ]
+if [ -z "${VERSION}" ]
 then
-  git checkout ${GIT_COMMIT}
-fi
+  VERSION=$(git describe --always --tags)	
+fi	
+COMMIT=$(git rev-parse HEAD)
 
 echo "--- all GO* vars ---"
 env | grep '^GO' || true
@@ -82,9 +61,14 @@ GO_LDFLAGS="-linkmode external"
 CGO_LDFLAGS="-g -O2"
 
 mkdir -p dist
+BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
 go build -v -x \
--ldflags "-X 'github.com/sarus-suite/parallax/version.Version=${VERSION}'" \
--o dist/parallax \
+-ldflags "$GO_LDFLAGS \
+-X=parallax/common.Version=${VERSION} \
+-X=parallax/common.Commit=${COMMIT} \
+-X=parallax/common.BuildDate=${BUILD_DATE}" \
+-o dist/parallax
 
 file dist/parallax
 readelf -l dist/parallax | grep interpreter || true

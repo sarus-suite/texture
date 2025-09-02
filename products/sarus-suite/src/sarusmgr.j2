@@ -4,7 +4,8 @@ set -e
 
 SCRIPTNAME="$(basename $0)"
 THIS_DIR="$(readlink -f $(dirname $0))"
-BASE_DIR="$(dirname ${THIS_DIR})"
+export BASE_DIR="$(dirname ${THIS_DIR})"
+export USERSPACE_RUN='yes'
 TMP_DIR="${BASE_DIR}/tmp"
 
 THIS_GIT_TAG="{{ git_tag }}"
@@ -17,12 +18,48 @@ function print_help() {
   Usage: $SCRIPTNAME <COMMAND>
   
   Commands:
-    configure : configure sarus-suite for the local system
+    build <component> : rebuild a component
 
-    test      : run tests
+    configure         : configure sarus-suite for the local system
+
+    fetch <component> : fetch a different version of a component
+
+    list              : list sarus suite components
+
+    test              : run tests
 
   Options:
+
     --version|-v : print version
+
+EOF
+}
+
+function print_help_build() {
+  cat <<EOF
+
+  Usage: $SCRIPTNAME build <component>
+  
+  Options:
+
+    --branch <branch> : specific branch to build
+
+    --commit <commit> : specific commit to build
+
+    --tag <tag>       : specific tag to build
+
+EOF
+}
+
+function print_help_fetch() {
+  cat <<EOF
+
+  Usage: $SCRIPTNAME fetch <component>
+  
+  Options:
+
+    --release <release> : specific release to fetch
+
 EOF
 }
 
@@ -67,7 +104,22 @@ function parse_args() {
 
   # DETECT COMMAND
   case "$1" in
+    "build")
+      COMMAND="$1"
+      shift
+      ARGS=$@
+      ;;
     "configure")
+      COMMAND="$1"
+      shift
+      ARGS=$@
+      ;;
+    "fetch")
+      COMMAND="$1"
+      shift
+      ARGS=$@
+      ;;
+    "list")
       COMMAND="$1"
       shift
       ARGS=$@
@@ -93,6 +145,99 @@ function parse_args() {
   esac
 }
 
+function parse_build_args() {
+  if [ $# -eq 0 ]
+  then
+    echo "ERROR: a component must be specified"
+    print_help_build
+    exit 1    
+  fi	  
+  
+  # DETECT PRODUCT 
+  case "$1" in
+    "--help"|"-h")
+      print_help_build
+      exit 0      
+      ;;
+    *)
+     PRODUCT="$1"	    
+     shift
+     ;;
+  esac
+  
+  # GRAB options 
+  while [ -n "$1" ]
+  do	  
+    case "$1" in
+    "--branch"|"-b")
+      shift	    
+      export GIT_BRANCH="$1"
+      shift	    
+      ;;
+    "--commit"|"-c")
+      shift	    
+      export GIT_COMMIT="$1"
+      shift	    
+      ;;
+    "--tag"|"-t")
+      shift	    
+      export GIT_TAG="$1"
+      shift	    
+      ;;
+    "--help"|"-h")
+      print_help_build
+      exit 0      
+      ;;
+    *)
+     echo "ERROR: unrecognized option: \"$1\""
+     print_help_build
+     exit 1
+    esac
+  done    
+}
+
+function parse_fetch_args() {
+  if [ $# -eq 0 ]
+  then
+    echo "ERROR: a component must be specified"
+    print_help_fetch
+    exit 1    
+  fi	  
+  
+  # DETECT PRODUCT 
+  case "$1" in
+    "--help"|"-h")
+      print_help_fetch
+      exit 0      
+      ;;
+    *)
+     PRODUCT="$1"	    
+     shift
+     ;;
+  esac
+  
+  # GRAB options 
+  while [ -n "$1" ]
+  do	  
+    case "$1" in
+    "--release"|"-r")
+      shift	    
+      RELEASE="$1"
+      shift	    
+      return 0      
+      ;;
+    "--help"|"-h")
+      print_help_fetch
+      exit 0      
+      ;;
+    *)
+     echo "ERROR: unrecognized option: \"$1\""
+     print_help_fetch
+     exit 1
+    esac
+  done    
+}
+
 function check_input() {
 
   if [ -z "${COMMAND}" ]
@@ -102,7 +247,171 @@ function check_input() {
     exit 1
   fi
 
-  # Set defaults	
+}
+
+function get_github_org() {
+  local PRODUCT="$1"
+  local GITHUB_ORG=""
+
+  case "${PRODUCT}" in
+    parallax)
+      GITHUB_ORG="sarus-suite"
+      ;;
+    conmon|crun|fuse-overlayfs|podman)
+      GITHUB_ORG="containers"
+      ;;
+    *)
+      echo "NOT_FOUND"
+      echo "ERROR: Cannot find GITHUB organization for ${PRODUCT}" >&2
+      return 1
+      ;;
+  esac	  
+
+  echo "${GITHUB_ORG}"
+  return 0
+}
+
+function get_git_url() {
+  local PRODUCT="$1"	
+  local GITHUB_ORG=$(get_github_org ${PRODUCT}) || return 1
+
+  case "${PRODUCT}" in
+    conmon|crun|fuse-overlayfs|parallax|podman)
+      echo "https://github.com/${GITHUB_ORG}/${PRODUCT}.git"
+      return 0 
+      ;;
+    *)
+      echo "ERROR: Internal error missing GIT reference for product ${PRODUCT}" >&2
+      return 1
+      ;;
+  esac	  
+ 
+}
+
+function check_build_input() {
+  BUILD_SUPPORTED_PRODUCTS="conmon parallax podman"
+
+  # Check PRODUCT
+  if [ -z "${PRODUCT}" ]
+  then
+    echo "ERROR: No component specified"    	  
+    print_help_build
+    exit 1
+  fi
+
+  if [ ! -d "${TMP_DIR}/texture/products/${PRODUCT}" ]
+  then
+    echo "ERROR: \"$PRODUCT\" is not a sarus-suite component"
+    exit 1
+  fi
+
+  if ! ( echo " $BUILD_SUPPORTED_PRODUCTS " | grep -q " $PRODUCT ")
+  then
+    echo "ERROR: command build is unavailable for \"$PRODUCT\""
+    exit 1
+  fi	  
+  
+  # GIT_URL
+  GIT_URL=$(get_git_url ${PRODUCT}) || return 1
+
+  # Check GIT Options without cloning
+  if [ -n "${GIT_BRANCH}" ]
+  then
+    if [ -n "${GIT_COMMIT}" ]
+    then
+      echo "ERROR: --commit, --branch and --tag are mutually exclusive. Choose one."
+      exit 1
+    fi
+    if [ -n "${GIT_TAG}" ]
+    then
+      echo "ERROR: --commit, --branch and --tag are mutually exclusive. Choose one."
+      exit 1
+    fi
+
+    # check GIT_BRANCH remote existence
+    FOUND=$(git ls-remote --heads ${GIT_URL} refs/heads/"${GIT_BRANCH}" | wc -l)
+    if [ ${FOUND} -eq 0 ]
+    then
+      echo "ERROR: cannot find branch \"${GIT_BRANCH}\" "
+      exit 1
+    fi	    
+  fi
+  if [ -n "${GIT_COMMIT}" ]
+  then
+    if [ -n "${GIT_TAG}" ]
+    then
+      echo "ERROR: --commit, --branch and --tag are mutually exclusive. Choose one."
+      exit 1
+    fi
+  fi
+  if [ -n "${GIT_TAG}" ]
+  then
+    # check GIT_BRANCH remote existence
+    FOUND=$(git ls-remote --tags ${GIT_URL} refs/tags/"${GIT_TAG}" | wc -l)
+    if [ ${FOUND} -eq 0 ]
+    then
+      echo "ERROR: cannot find tag \"${GIT_TAG}\" "
+      exit 1
+    fi	    
+  fi
+}
+
+function check_fetch_input() {
+  FETCH_SUPPORTED_PRODUCTS="crun fuse-overlayfs parallax"
+  
+  # Check PRODUCT
+  if [ -z "${PRODUCT}" ]
+  then
+    echo "ERROR: No component specified"    	  
+    print_help_fetch
+    exit 1
+  fi
+
+  if [ ! -d "${TMP_DIR}/texture/products/${PRODUCT}" ]
+  then
+    echo "ERROR: \"$PRODUCT\" is not a sarus-suite component"
+    exit 1
+  fi
+  
+  if ! ( echo " $FETCH_SUPPORTED_PRODUCTS " | grep -q " $PRODUCT ")
+  then
+    echo "ERROR: command fetch is unavailable for \"$PRODUCT\""
+    exit 1
+  fi	  
+
+  # GIT_URL
+  GIT_URL=$(get_git_url ${PRODUCT})
+  [ $? -ne 0 ] && return 1
+
+  # Check if RELEASE exists
+  if [ -n "${RELEASE}" ]
+  then
+    RELEASES=$(curl -sL https://api.github.com/repos/$(get_github_org ${PRODUCT})/${PRODUCT}/releases | jq -r ".[].tag_name")	  
+    if ! (echo "$RELEASES" | grep -q "${RELEASE}")
+    then
+      echo "ERROR: cannot find release \"${RELEASE}\"" >&2
+      echo "Choose one from:" >&2
+      echo "${RELEASES}" >&2
+      echo "" >&2      
+      return 1
+    else
+      case "$PRODUCT" in
+        "crun")
+          export CRUN_VERSION="$RELEASE"		
+          ;;		
+        "fuse-overlayfs")
+          export FUSEOVERLAYFS_VERSION="$RELEASE"		
+          ;;		
+        "parallax")
+          export PARALLAX_VERSION="$RELEASE"		
+          ;;		
+        *)
+          echo "ERROR: Internal error cannot handle release for product ${PRODUCT}" >&2
+          return 1
+          ;;
+      esac	      
+    fi	    
+  fi
 }
 
 function check_dependencies() {
@@ -192,21 +501,26 @@ EOF
   
 }
 
-function setup_test_env() {
-
+function setup_texture() {
   [ ! -d "${TMP_DIR}" ] && mkdir -p "${TMP_DIR}"
 
   # Check texture repo local copy presence
-  PRODUCT="texture"
+  local PRODUCT="texture"
   REPO="sarus-suite/${PRODUCT}"
   if [ ! -d "${TMP_DIR}/${PRODUCT}" ]
   then
     pushd ${TMP_DIR} 1>/dev/null
     GIT_REPO_URL="https://github.com/${REPO}.git"
-    git clone ${GIT_REPO_URL} ${PRODUCT}
+    git clone ${GIT_REPO_URL} ${PRODUCT} 2>/dev/null
     popd 1>/dev/null
   fi
-	
+
+}
+
+function setup_test_env() {
+
+  setup_texture
+
   # Check bats command
   set +e
   BATS_VERSION=$(bats --version 2>/dev/null)
@@ -217,9 +531,9 @@ function setup_test_env() {
     if [ ! -d "${TMP_DIR}/test/bats" ]
     then
       pushd ${TMP_DIR} 1>/dev/null
-      git clone https://github.com/bats-core/bats-core.git test/bats
-      git clone https://github.com/bats-core/bats-support.git test/test_helper/bats-support
-      git clone https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert
+      git clone https://github.com/bats-core/bats-core.git test/bats 2>/dev/null
+      git clone https://github.com/bats-core/bats-support.git test/test_helper/bats-support 2>/dev/null
+      git clone https://github.com/bats-core/bats-assert.git test/test_helper/bats-assert 2>/dev/null
       popd 1>/dev/null
     fi
     export PATH="${TMP_DIR}/test/bats/bin:$PATH"
@@ -234,10 +548,59 @@ function run_tests() {
   
 }
 
+function build() {
+  parse_build_args $@
+
+  setup_texture
+  check_build_input || return 1
+
+  local BUILD_COMMAND="${TMP_DIR}/texture/products/${PRODUCT}/build.sh"
+  if [ ! -f "${BUILD_COMMAND}" ]
+  then
+    echo "ERROR: cannot find ${BUILD_COMMAND}"
+    exit 1
+  fi	  
+
+  ${BUILD_COMMAND}
+}
+
+function fetch() {
+  parse_fetch_args $@
+
+  setup_texture
+  check_fetch_input || return 1
+
+  local FETCH_COMMAND="${TMP_DIR}/texture/products/${PRODUCT}/fetch.sh"
+  if [ ! -f "${FETCH_COMMAND}" ]
+  then
+    echo "ERROR: cannot find ${FETCH_COMMAND}"
+    exit 1
+  fi	  
+
+  ${FETCH_COMMAND}
+}
+
+function list_products() {
+  echo "conmon"	
+  echo "crun"	
+  echo "fuse-overlayfs"	
+  echo "parallax"	
+  echo "podman"	
+}
+
 function run_command() {
   case $COMMAND in
+    "build")
+      build ${ARGS}
+      ;;      
     "configure")
       configure ${ARGS}
+      ;;      
+    "fetch")
+      fetch ${ARGS}
+      ;;      
+    "list")
+      list_products ${ARGS}
       ;;      
     "test")
       run_tests ${ARGS}

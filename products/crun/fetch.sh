@@ -10,31 +10,19 @@ cd $SCRIPT_DIR
 check_build_os || exit 1
 create_tmp_folders
 
-. ${SCRIPT_DIR}/etc/release.cfg
-. ${SCRIPT_DIR}/etc/system.cfg
-
-if [ "$ARCH" == "x86_64" ]
-then
-  GARCH="amd64"
-else
-  GARCH="$ARCH"
-fi
-
 DOWNLOAD_DIR="${TMP_DIR}/download"
-REPO="containers/crun"
-BASE_URL="https://github.com/${REPO}/releases/download"
+GITHUB_ORG=$(get_github_org ${PRODUCT}) || exit 1
 
 if [ -z "$CRUN_VERSION" ]
 then
-  CRUN_VERSION=$(get_github_repo_latest_release ${REPO})
+  CRUN_VERSION=$(get_github_repo_latest_release "${GITHUB_ORG}/${PRODUCT}")
 fi
 
-CRUN_URL="${BASE_URL}/${CRUN_VERSION}/crun-${CRUN_VERSION}-linux-${GARCH}"
 mkdir -p ${DOWNLOAD_DIR}
 cd ${DOWNLOAD_DIR}
-curl -sOL ${CRUN_URL}
+github_fetch ${PRODUCT} ${CRUN_VERSION} crun-${CRUN_VERSION}-linux-${GOARCH} || exit 1
 
 # INSTALL
 mkdir -p ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin
-mv ${DOWNLOAD_DIR}/crun-${CRUN_VERSION}-linux-${GARCH} ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/crun
+mv ${DOWNLOAD_DIR}/crun-${CRUN_VERSION}-linux-${GOARCH} ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/crun
 chmod +x ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin/crun
