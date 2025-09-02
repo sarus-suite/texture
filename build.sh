@@ -9,7 +9,7 @@ cd $SCRIPT_DIR
 
 PRODUCTS_TO_FETCH="crun fuse-overlayfs parallax passt"
 PRODUCTS_TO_BUILD="conmon podman squashfuse"
-PRODUCTS_TO_BUILD_RPM="crun fuse-overlayfs parallax"
+PRODUCTS_TO_BUILD_RPM="conmon crun fuse-overlayfs parallax"
 
 
 function print_help() {

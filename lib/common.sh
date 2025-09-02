@@ -36,19 +36,123 @@ function create_tmp_folders() {
   [ ! -d "${TMP_DIR}" ] && mkdir -p ${TMP_DIR}
   BUILD_DIR="${TMP_DIR}/build"
   [ ! -d "${BUILD_DIR}" ] && mkdir -p ${BUILD_DIR}
-  USERSPACE_DIR="${TMP_DIR}/userspace"
+
+  if [ "${USERSPACE_RUN}" == 'yes' ]
+  then
+    USERSPACE_DIR="$(readlink -f $(dirname ${BASE_DIR}))"
+  else	  
+    USERSPACE_DIR="${TMP_DIR}/userspace"
+  fi
   [ ! -d "${USERSPACE_DIR}" ] && mkdir -p ${USERSPACE_DIR}
+
   PACKAGES_DIR="${TMP_DIR}/packages"
   [ ! -d "${PACKAGES_DIR}" ] && mkdir -p ${PACKAGES_DIR}
   ARTIFACTS_DIR="${TMP_DIR}/artifacts"
   [ ! -d "${ARTIFACTS_DIR}" ] && mkdir -p ${ARTIFACTS_DIR}
 }
 
-ARCH=$(uname -m)
+function get_github_org() {
+  local PRODUCT=$1
+  local GITHUB_ORG=""
+  case "$PRODUCT" in
+    parallax)
+      GITHUB_ORG="sarus-suite"
+      ;;      
+    conmon|crun|fuse-overlayfs|podman)
+      GITHUB_ORG="containers"
+      ;;      
+    *)
+      echo "NOT_FOUND"
+      echo "ERROR: Cannot find GITHUB organization for ${PRODUCT}" >&2
+      return 1
+      ;;      
+  esac
+
+  echo "${GITHUB_ORG}"
+  return 0  
+}
+
+function github_fetch() {
+
+  local PRODUCT="$1"
+  local RELEASE="$2"
+  local ARTIFACT="$3"
+
+  local BASE_URL="https://github.com"
+  local GITHUB_ORG=$(get_github_org ${PRODUCT}) || return 1
+  
+  URL="${BASE_URL}/${GITHUB_ORG}/${PRODUCT}/releases/download/${RELEASE}/${ARTIFACT}"
+
+  curl -sOL ${URL}
+  RC=$?
+  if [ $RC -ne 0 ] || [ ! -f "${ARTIFACT}" ]
+  then
+    echo "ERROR: Cannot download ${URL}"
+    return 1
+  else
+    if ( file -b ${ARTIFACT} | grep -q "^ASCII" )
+    then
+      if [ "$(cat ${ARTIFACT})" == "Not Found" ]
+      then
+        rm -f ${ARTIFACT}
+        echo "ERROR: Cannot find artifact at ${URL}"
+	return 1
+      fi	      
+    fi	    
+  fi	  
+  return 0
+}
+
+function github_fetch_sources() {
+  local PRODUCT="$1"
+
+  local BASE_URL="https://github.com"
+  local GITHUB_ORG=$(get_github_org ${PRODUCT}) || return 1
+  local GIT_REPO_URL="${BASE_URL}/${GITHUB_ORG}/${PRODUCT}.git"
+
+  # clean-up previous
+  rm -rf ${PRODUCT}
+
+  if [ -n "$GIT_TAG" ]
+  then
+    local GIT_BRANCH_OPT="--branch ${GIT_TAG} --depth 1"
+  elif [ -n "$GIT_BRANCH" ]
+  then
+    local GIT_BRANCH_OPT="--branch ${GIT_BRANCH} --depth 1"
+  else
+    local GIT_BRANCH_OPT=""
+  fi
+
+  git clone ${GIT_BRANCH_OPT} ${GIT_REPO_URL} ${PRODUCT}
+  pushd ${PRODUCT} >/dev/null
+
+  if [ -n "$GIT_COMMIT" ]
+  then
+    git checkout ${GIT_COMMIT}
+  fi
+
+  popd >/dev/null
+}
+
+if [ -z "${ARCH}" ] || [ -z "${GOARCH}" ]
+then	
+  ARCH=$(uname -m)
+
+  if [ "$ARCH" == "x86_64" ]
+  then
+    GOARCH="amd64"
+  else
+    GOARCH="$ARCH"
+  fi
+fi
 
 pushd $SCRIPT_DIR >/dev/null
 
+if [ -z "${USERSPACE_RUN}" ]
+then
+  . etc/release.cfg
+fi	
+. etc/system.cfg
 . lib/build_os.sh
 
 popd >/dev/null
-

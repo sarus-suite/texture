@@ -4,6 +4,12 @@ SUPPORTED_BUILD_OS="opensuse-15.5"
 DEFAULT_BUILD_OS="opensuse-15.5"
 
 function check_build_os() {
+
+  if [ "$USERSPACE_RUN" == "yes" ]
+  then
+    BUILD_OS=${OS}  	  
+  fi
+
   # Set defaults
   if [ -z "${BUILD_OS}" ]
   then
