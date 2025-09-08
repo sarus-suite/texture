@@ -38,7 +38,7 @@ function get_artifacts_versions() {
 
   cp ${BIN} ./${PRODUCT}
   cp ${THIS_DIR}/src/${BUILD_OS_NAME}/version_in_container.sh ./version_in_container.sh
-  local VERSION_OUTPUT=$(podman run --rm -ti -v ${SRC_DIR}/rpmbuild:/tmp \
+  local VERSION_OUTPUT=$(podman run --rm -v ${SRC_DIR}/rpmbuild:/tmp \
      docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/version_in_container.sh)
 
   CONMON_VERSION=$(echo "${VERSION_OUTPUT}" | awk '/conmon version /{print $NF}' | sed 's/[^0-9.].*//')
@@ -50,7 +50,7 @@ function get_artifacts_versions() {
 function check_artifacts_versions() {
   if [ -z "${CONMON_VERSION}" ]
   then
-    echo "Error: Cannot find \$CONMON_VERSION, fetch crun in advance."
+    echo "Error: Cannot find \$CONMON_VERSION, fetch conmon in advance."
     return 1
   fi
 }
