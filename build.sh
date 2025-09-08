@@ -12,11 +12,6 @@ PRODUCTS_TO_BUILD="conmon podman squashfuse"
 PRODUCTS_TO_BUILD_RPM="conmon crun fuse-overlayfs parallax"
 FINAL_PRODUCT_TO_BUILD="sarus-suite"
 
-PRODUCTS_TO_FETCH=""
-PRODUCTS_TO_BUILD="conmon"
-PRODUCTS_TO_BUILD_RPM="conmon"
-FINAL_PRODUCT_TO_BUILD=""
-
 function print_help() {
   cat <<EOF
 

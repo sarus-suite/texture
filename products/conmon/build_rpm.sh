@@ -39,8 +39,6 @@ function get_artifacts_versions() {
   cp ${BIN} ./${PRODUCT}
   cp ${THIS_DIR}/src/${BUILD_OS_NAME}/version_in_container.sh ./version_in_container.sh
 
-  podman run --rm -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /usr/bin/ldd /tmp/conmon
-  
   local VERSION_OUTPUT=$(podman run --rm -v ${SRC_DIR}/rpmbuild:/tmp \
      docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/version_in_container.sh)
 
