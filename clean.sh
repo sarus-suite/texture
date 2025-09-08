@@ -42,7 +42,7 @@ cd $SCRIPT_DIR
 
 if [ "${BUILD}" == "yes" ]
 then
-  find tmp -maxdepth 1 -mindepth 1 ! -name artifacts -exec rm -rf {} \;
+  [ -d tmp ] && find tmp -maxdepth 1 -mindepth 1 ! -name artifacts -exec rm -rf {} \; || true
 else
   rm -rf tmp
 fi
