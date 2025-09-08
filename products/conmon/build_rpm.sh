@@ -28,10 +28,23 @@ then
   fi
 fi
 
+mkdir -p ${SRC_DIR}/rpmbuild
+cd ${SRC_DIR}/rpmbuild
+
 function get_artifacts_versions() {
   unset CONMON_VERSION
-  CONMON_VERSION=$(${BIN} --version | awk '/conmon version /{print $NF}')
-  GIT_COMMIT=$(${BIN} --version | awk '/commit: /{print $NF}')
+
+  pushd ${SRC_DIR}/rpmbuild >/dev/null
+
+  cp ${BIN} ./${PRODUCT}
+  cp ${THIS_DIR}/src/${BUILD_OS_NAME}/version_in_container.sh ./version_in_container.sh
+  local VERSION_OUTPUT=$(podman run --rm -ti -v ${SRC_DIR}/rpmbuild:/tmp \
+     docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/version_in_container.sh)
+
+  CONMON_VERSION=$(echo "${VERSION_OUTPUT}" | awk '/conmon version /{print $NF}' | sed 's/[^0-9.].*//')
+  GIT_COMMIT=$(echo "${VERSION_OUTPUT}" | awk '/commit: /{print $NF}')
+
+  popd >/dev/null
 }
 
 function check_artifacts_versions() {
@@ -43,9 +56,6 @@ function check_artifacts_versions() {
 }
 get_artifacts_versions
 check_artifacts_versions || exit 1
-
-mkdir -p ${SRC_DIR}/rpmbuild
-cd ${SRC_DIR}/rpmbuild
 
 VERSION=${CONMON_VERSION}
 RELEASE="0.${BUILD_OS_NAME}.${BUILD_OS_VERSION}"

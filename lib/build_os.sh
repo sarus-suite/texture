@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-SUPPORTED_BUILD_OS="opensuse-15.5"
+SUPPORTED_BUILD_OS="opensuse-15.5,opensuse-15.6"
 DEFAULT_BUILD_OS="opensuse-15.5"
 
 function check_build_os() {

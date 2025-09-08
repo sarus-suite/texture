@@ -10,7 +10,7 @@ cd $SCRIPT_DIR
 PRODUCTS_TO_FETCH="crun fuse-overlayfs parallax passt"
 PRODUCTS_TO_BUILD="conmon podman squashfuse"
 PRODUCTS_TO_BUILD_RPM="conmon crun fuse-overlayfs parallax"
-
+FINAL_PRODUCT_TO_BUILD="sarus-suite"
 
 function print_help() {
   cat <<EOF
@@ -18,7 +18,10 @@ function print_help() {
   Usage: $SCRIPTNAME <OPTIONS>
 
   Options:
-    --build-os <OS> : build artifacts for a specific OS. Default: $DEFAULT_BUILD_OS
+    --build-os <OS> : build artifacts for a specific OS.
+                      Default: $DEFAULT_BUILD_OS
+                      Supported build OSes: ${SUPPORTED_BUILD_OS}
+
 
 EOF
 }
@@ -47,6 +50,7 @@ function parse_args() {
 
 function check_input() {
   check_build_os || exit 1
+  export BUILD_OS
 }
 
 . lib/common.sh
@@ -120,19 +124,21 @@ do
   fi
 done
 
-PRODUCT="sarus-suite"
-echo "Building ${PRODUCT} RPM ..."
-echo
-${PRODUCT}/build.sh
-RC=$?
-if [ $RC -eq 0 ]
-then
-  RESULT="succeeded"
-else
-  RESULT="failed"
-fi
-echo
-echo "${PRODUCT} RPM building ${RESULT}. RC=$RC"
-echo
+for PRODUCT in ${FINAL_PRODUCT_TO_BUILD}
+do
+  echo "Building ${PRODUCT} RPM ..."
+  echo
+  ${PRODUCT}/build.sh
+  RC=$?
+  if [ $RC -eq 0 ]
+  then
+    RESULT="succeeded"
+  else
+    RESULT="failed"
+  fi
+  echo
+  echo "${PRODUCT} RPM building ${RESULT}. RC=$RC"
+  echo
+done
 
 exit $RC
