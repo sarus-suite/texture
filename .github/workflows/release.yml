@@ -8,6 +8,13 @@ on:
 jobs:
   build:
     if: github.actor == 'matteo-chesi'
+    strategy:
+      matrix:
+        include:
+          - arch: x86_64
+            build_os: opensuse-15.5
+          - arch: x86_64
+            build_os: opensuse-15.6
     env:
       os: opensuse
       os_version: 15.5
@@ -17,35 +24,14 @@ jobs:
 
       - name: Build
         run: |
-          ./clean.sh && \
-          ./build.sh && \
-          echo "ARCH=$(uname -m)" >> $GITHUB_ENV
-
-#      - name: Bundle
-#        run: |
-#          cd ${{ github.workspace }}
-#          mkdir -p artifacts/sarus-suite
-#          cd artifacts/sarus-suite
-#          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/noarch/*.rpm ./
-#          mv ../packages/${{ env.os }}-${{ env.os_version }}/RPMS/${{ env.ARCH }}/*.rpm ./
-#          cd ..
-#          tar cvzf ./sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz sarus-suite/
-      
-#     - name: Upload bundle as artifact
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: "sarus-suite"
-#          path: ${{ github.workspace }}/artifacts/sarus-suite-${{ env.os }}-${{ env.os_version }}-${{ env.ARCH }}.tar.gz
-#          if-no-files-found: error
+          ./clean.sh --build && \
+          ./build.sh --build-os ${{ matrix.build_os }}
 
   release:
     if: github.actor == 'matteo-chesi'
     runs-on: chesim-zinal-login
     needs: [build]
     steps:
-#      - name: Download artifacts
-#        uses: actions/download-artifact@v4
-
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
