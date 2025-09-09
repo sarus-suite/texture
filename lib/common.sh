@@ -154,5 +154,6 @@ then
 fi	
 . etc/system.cfg
 . lib/build_os.sh
+. lib/build_container_image.sh
 
 popd >/dev/null

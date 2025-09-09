@@ -51,6 +51,7 @@ function parse_args() {
 function check_input() {
   check_build_os || exit 1
   export BUILD_OS
+  check_build_container_image || exit 1
 }
 
 . lib/common.sh

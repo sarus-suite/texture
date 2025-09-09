@@ -8,6 +8,7 @@ cd $SCRIPT_DIR
 
 . lib/common.sh
 check_build_os || exit 1
+check_build_container_image || exit 1
 create_tmp_folders
 
 . ${SCRIPT_DIR}/etc/release.cfg
@@ -37,10 +38,13 @@ function get_artifacts_versions() {
   pushd ${SRC_DIR}/rpmbuild >/dev/null
 
   cp ${BIN} ./${PRODUCT}
+  cp ${THIS_DIR}/src/${BUILD_OS_NAME}/run.packages ./
   cp ${THIS_DIR}/src/${BUILD_OS_NAME}/version_in_container.sh ./version_in_container.sh
 
+  #local VERSION_OUTPUT=$(podman run --rm -v ${SRC_DIR}/rpmbuild:/tmp \
+  #   docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/version_in_container.sh)
   local VERSION_OUTPUT=$(podman run --rm -v ${SRC_DIR}/rpmbuild:/tmp \
-     docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/version_in_container.sh)
+      ${BUILD_IMAGE_NAME} /tmp/version_in_container.sh)
 
   CONMON_VERSION=$(echo "${VERSION_OUTPUT}" | awk '/conmon version /{print $NF}' | sed 's/[^0-9.].*//')
   GIT_COMMIT=$(echo "${VERSION_OUTPUT}" | awk '/commit: /{print $NF}')
@@ -86,10 +90,12 @@ j2cli --customize ${CUSTOM_FILE} -f json ${THIS_DIR}/src/${BUILD_OS_NAME}/${PROD
 
 cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
+cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_rpm.packages ./
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_rpm_in_container.sh ./build_rpm_in_container.sh
 cp ${BIN} ./${PRODUCT}
 
-podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_rpm_in_container.sh
+#podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_rpm_in_container.sh
+podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp ${BUILD_IMAGE_NAME} /tmp/build_rpm_in_container.sh
 
 # INSTALL RPM
 OUT_DIR="${PACKAGES_DIR}"
