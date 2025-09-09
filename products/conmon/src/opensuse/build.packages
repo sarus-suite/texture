@@ -1,0 +1,10 @@
+gcc
+git
+make
+glib2-devel
+glibc-devel
+libseccomp-devel
+pkgconfig
+runc
+systemd
+systemd-devel
