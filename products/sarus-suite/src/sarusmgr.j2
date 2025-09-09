@@ -87,7 +87,7 @@ function detect_system() {
   [ ! -f /etc/os-release ] && fail "ERROR: Cannot detect linux distribution"
   . /etc/os-release
 
-  if [ "$ID_LIKE" == "suse" ]
+  if echo " $ID_LIKE " | grep -q " suse "
   then
     OS_NAME="opensuse"
     OS="${OS_NAME}-${VERSION_ID}"
@@ -415,7 +415,7 @@ function check_fetch_input() {
 }
 
 function check_dependencies() {
-  for cmd in which curl tar rpm2cpio cpio
+  for cmd in which curl tar rpm2cpio cpio python3
   do
     set +e
     OUTPUT=$(which $cmd 2>/dev/null)	
