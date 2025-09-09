@@ -1,0 +1,12 @@
+wget
+tar
+gzip
+git
+btrfsprogs
+device-mapper-devel
+libbtrfs-devel
+squashfs
+fuse-overlayfs
+squashfuse
+inotify-tools
+patterns-devel-base-devel_basis

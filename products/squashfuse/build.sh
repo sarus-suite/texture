@@ -8,6 +8,7 @@ cd $SCRIPT_DIR
 
 . lib/common.sh
 check_build_os || exit 1
+check_build_container_image || exit 1
 create_tmp_folders
 
 . ${SCRIPT_DIR}/etc/release.cfg
@@ -26,9 +27,11 @@ mkdir -p ${SRC_DIR}/rpmbuild
 cd ${SRC_DIR}/rpmbuild
 cp ${SCRIPT_DIR}/etc/release.cfg ./release.cfg
 cp ${SCRIPT_DIR}/etc/system.cfg ./system.cfg
+cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build.packages ./
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/squashfuse.spec ./squashfuse.spec
-podman run --rm -ti -e SQUASHFUSE_VERSION=${SQUASHFUSE_VERSION} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_in_container.sh
+#podman run --rm -ti -e SQUASHFUSE_VERSION=${SQUASHFUSE_VERSION} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_in_container.sh
+podman run --rm -ti -e SQUASHFUSE_VERSION=${SQUASHFUSE_VERSION} -v ${SRC_DIR}/rpmbuild:/tmp ${BUILD_IMAGE_NAME} /tmp/build_in_container.sh
 
 # INSTALL
 OUT_DIR="${PACKAGES_DIR}"

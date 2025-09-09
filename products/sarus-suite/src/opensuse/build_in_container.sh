@@ -1,7 +1,14 @@
 #!/usr/bin/bash
 
 cd $(dirname $0)
-zypper --non-interactive install rpm-build
+
+# if it is not a texture-build container, update it
+PACKAGES_FILE="build.packages"
+if [ ! -f /etc/texture.build ] && [ -f "${PACKAGES_FILE}" ]
+then
+  PACKAGES=$(cat ${PACKAGES_FILE} | paste -s -d" ")
+  zypper install -y ${PACKAGES}
+fi
 
 . ./release.cfg
 . ./system.cfg

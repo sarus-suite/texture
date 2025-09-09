@@ -9,6 +9,16 @@ function list_packages() {
 
 }
 
+function add_containerfile_excerpts() {
+
+  for file in $(ls ${SCRIPT_DIR}/products/*/src/${BUILD_OS_NAME}/*.Containerfile 2>/dev/null)
+  do
+    cat ${file}
+  done
+
+}
+
+
 function build_container_image_opensuse() {
   
   SRC_DIR="tmp/${BUILD_OS}/${ARCH}/build/container_image"
@@ -16,8 +26,6 @@ function build_container_image_opensuse() {
   
   BASE_IMAGE_NAME="${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION}"
   PACKAGES=$(list_packages)
-
-  echo $PACKAGES
 
   pushd ${SRC_DIR} >/dev/null
   cat <<EOF >Containerfile
@@ -27,6 +35,13 @@ FROM ${BASE_IMAGE_NAME} AS base
 RUN zypper --non-interactive refresh && \
   zypper --non-interactive update -y && \
   zypper --non-interactive install -y ${PACKAGES} 
+
+EOF
+
+  # Containerfile excerpts
+  add_containerfile_excerpts >>Containerfile
+
+  cat <<EOF >>Containerfile
 
 # Sign it
 RUN date +%Y-%m-%dT%H:%M:%S >/etc/texture.build

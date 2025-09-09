@@ -38,6 +38,7 @@ function get_artifacts_versions() {
   pushd ${SRC_DIR}/rpmbuild >/dev/null
 
   cp ${BIN} ./${PRODUCT}
+  cp ${THIS_DIR}/src/${BUILD_OS_NAME}/run.packages ./
   cp ${THIS_DIR}/src/${BUILD_OS_NAME}/version_in_container.sh ./version_in_container.sh
 
   #local VERSION_OUTPUT=$(podman run --rm -v ${SRC_DIR}/rpmbuild:/tmp \

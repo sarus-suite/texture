@@ -7,35 +7,30 @@ ARCH=$(uname -m)
 if [ "$ARCH" == "x86_64" ]
 then
   GOARCH="amd64"
+elif [ "$ARCH" == "aarch64" ]
+then	
+  GOARCH="arm64"
 else
   GOARCH="${ARCH}"
 fi
 
-zypper --non-interactive refresh && \
-zypper --non-interactive update -y && \
-zypper --non-interactive install -y \
-  wget \
-  tar \
-  gzip \
-  git \
-  btrfsprogs \
-  device-mapper-devel \
-  libbtrfs-devel \
-  squashfs \
-  fuse-overlayfs \
-  squashfuse \
-  inotify-tools \
-  patterns-devel-base-devel_basis
+# if it is not a texture-build container, update it
+PACKAGES_FILE="build.packages"
+if [ ! -f /etc/texture.build ] && [ -f "${PACKAGES_FILE}" ]
+then
+  PACKAGES=$(cat ${PACKAGES_FILE} | paste -s -d" ")
+  zypper install -y ${PACKAGES}
 
-# Go toolchain
-GO_VERSION=1.24.0
-set -eux; \
-wget "https://go.dev/dl/go${GO_VERSION}.linux-${GOARCH}.tar.gz"; \
-rm -rf /usr/local/go; \
-tar -C /usr/local -xzf "go${GO_VERSION}.linux-${GOARCH}.tar.gz"; \
-rm "go${GO_VERSION}.linux-${GOARCH}.tar.gz"
+  # Go toolchain
+  GO_VERSION=1.24.0
+  set -eux; \
+  wget "https://go.dev/dl/go${GO_VERSION}.linux-${GOARCH}.tar.gz"; \
+  rm -rf /usr/local/go; \
+  tar -C /usr/local -xzf "go${GO_VERSION}.linux-${GOARCH}.tar.gz"; \
+  rm "go${GO_VERSION}.linux-${GOARCH}.tar.gz"
 
-export PATH=$PATH:/usr/local/go/bin
+  export PATH=$PATH:/usr/local/go/bin
+fi
 
 REPO="parallax"
 cd ${REPO}

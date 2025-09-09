@@ -1,7 +1,14 @@
 #!/usr/bin/bash
 
 cd $(dirname $0)
-zypper --non-interactive install automake autogen libtool make gcc git rpm-build rpmlint fuse fuse-devel lzo-devel liblzo2-2 liblz4-devel liblz4-1 libzstd-devel libzstd1 xz-devel xz liblzma5 libattr-devel libattr zlib zlib-devel
+
+# if it is not a texture-build container, update it
+PACKAGES_FILE="build.packages"
+if [ ! -f /etc/texture.build ] && [ -f "${PACKAGES_FILE}" ]
+then
+  PACKAGES=$(cat ${PACKAGES_FILE} | paste -s -d" ")
+  zypper install -y ${PACKAGES}
+fi
 
 . ./release.cfg
 . ./system.cfg

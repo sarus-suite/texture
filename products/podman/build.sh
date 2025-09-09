@@ -8,6 +8,7 @@ cd $SCRIPT_DIR
 
 . lib/common.sh
 check_build_os || exit 1
+check_build_container_image || exit 1
 create_tmp_folders
 
 # BUILD
@@ -33,7 +34,9 @@ github_fetch_sources ${PRODUCT}
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/podman.spec ./${PRODUCT}/rpm/podman.spec
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/podman.conf ./${PRODUCT}/rpm/podman.conf
-podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_in_container.sh
+cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build.packages ./
+#podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_in_container.sh
+podman run --rm -ti -e PRODUCT=${PRODUCT} -v ${SRC_DIR}/rpmbuild:/tmp ${BUILD_IMAGE_NAME} /tmp/build_in_container.sh
 
 # EXTRACT RPMS
 OUT_DIR="${PACKAGES_DIR}"
