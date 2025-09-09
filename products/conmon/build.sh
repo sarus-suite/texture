@@ -8,6 +8,7 @@ cd $SCRIPT_DIR
 
 . lib/common.sh
 check_build_os || exit 1
+check_build_container_image || exit 1
 create_tmp_folders
 
 # BUILD
@@ -30,8 +31,10 @@ mkdir -p ${SRC_DIR}
 cd ${SRC_DIR}
 github_fetch_sources ${PRODUCT}
 
+cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build.packages ./
 cp ${THIS_DIR}/src/${BUILD_OS_NAME}/build_in_container.sh ./build_in_container.sh
-podman run --rm -ti -e VERSION=${CONMON_VERSION} -v ${SRC_DIR}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_in_container.sh
+#podman run --rm -ti -e VERSION=${CONMON_VERSION} -v ${SRC_DIR}:/tmp docker.io/${BUILD_OS_NAME}/leap:${BUILD_OS_VERSION} /tmp/build_in_container.sh
+podman run --rm -ti -e VERSION=${CONMON_VERSION} -v ${SRC_DIR}:/tmp ${BUILD_IMAGE_NAME} /tmp/build_in_container.sh
 
 # INSTALL
 mkdir -p ${USERSPACE_DIR}/${SARUS_SUITE_DIR}/bin

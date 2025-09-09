@@ -24,8 +24,8 @@ function check_build_os() {
 
   case ${BUILD_OS} in
     opensuse-*)
-       BUILD_OS_NAME='opensuse'
-       BUILD_OS_VERSION=$(echo $BUILD_OS | sed 's/^[^-]*-//')
+       export BUILD_OS_NAME='opensuse'
+       export BUILD_OS_VERSION=$(echo $BUILD_OS | sed 's/^[^-]*-//')
        ;;
   esac
 }
