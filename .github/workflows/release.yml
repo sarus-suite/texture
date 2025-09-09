@@ -27,12 +27,7 @@ jobs:
           ./clean.sh --build && \
           ./build.sh --build-os ${{ matrix.build_os }}
 
-  release:
-    if: github.actor == 'matteo-chesi'
-    runs-on: chesim-zinal-login
-    needs: [build]
-    steps:
-      - name: Create Release
+      - name: Release
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
